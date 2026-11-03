@@ -1,0 +1,260 @@
+You are working on the NxtGen Analysis project for our existing Shopify website:
+
+https://nxtgenanalysis.com/
+
+NxtGen Analysis provides laboratory testing services and Certificates of Analysis (COAs) to businesses, including businesses that sell peptides.
+
+Your task is to improve the Shopify theme and build the application that manages COA records, generates completed COA images, and makes published reports available through Shopify.
+
+## 1. Inspect the project first
+
+The working directory contains two folders:
+
+- `Products`
+- `theme_export__nxtgenanalysis-com-atelier__16OCT2026-0107pm`
+
+Before implementing changes:
+
+- Inspect both folders thoroughly.
+- Read any existing project instructions.
+- Review the theme’s structure, styling, reusable components, and existing functionality.
+- Identify existing integrations or code that can be reused.
+- Examine every product folder and its reference images.
+- Document your findings, proposed architecture, and implementation plan.
+
+Use the local files as the primary implementation reference. Review the live website for additional context where accessible.
+
+Do not assume that functionality already works simply because its interface exists.
+
+## 2. Improve the Shopify theme
+
+The theme was developed by a previous developer. Preserve its overall brand identity and improve the areas that need stronger UI/UX, particularly:
+
+- Order Tests page.
+- Order Tests section on the homepage.
+- FAQ section on the homepage.
+- Verify COA page.
+- Test Reports page, where needed for the new integration.
+
+Use your judgment to improve hierarchy, spacing, typography, buttons, navigation, forms, responsiveness, and accessibility.
+
+The result should feel like a professionally designed laboratory testing website. Avoid generic template styling, excessive decorative effects, unnecessary animations, and repetitive card layouts.
+
+Requirements:
+
+- Keep the existing theme’s visual direction.
+- Reuse its fonts, colors, and components where appropriate.
+- Preserve Shopify’s product, variant, cart, and checkout behavior.
+- Keep editable content manageable through the Shopify theme editor where practical.
+- Provide clear loading, empty, success, and error states for interactive features.
+- Make all affected pages work well on mobile and desktop.
+- Preserve existing content unless a change is necessary for the requested functionality.
+- Do not invent laboratory credentials, certifications, turnaround times, pricing, test claims, or business policies.
+
+## 3. Prefer one application
+
+My initial idea was to build two applications:
+
+1. A Shopify custom app that connects the storefront to the COA database.
+2. A dashboard/database application where Dr. Nishal and authorized staff manage COAs.
+
+Prefer one application with a shared backend and database if that can cleanly support both responsibilities.
+
+The application should include:
+
+- A secure staff dashboard.
+- A database for COA records and product-specific test results.
+- COA image generation.
+- Cloudflare R2 storage integration.
+- A supported integration with the Shopify storefront.
+- Public access to published COAs through the intended verification and report interfaces.
+
+Choose a practical, maintainable architecture. Explain the decision before implementation, then proceed with reasonable assumptions. Ask questions only when an unresolved issue materially blocks correct implementation.
+
+Do not add Shopify API access, permissions, or integrations that the project does not need. Keep credentials and privileged operations on the server.
+
+## 4. Analyze the Products folder
+
+The `Products` folder contains the COA products/test types we offer. Each product can require a different set of fields.
+
+There are two types of reference images:
+
+1. **Completed COA examples:** Use these to identify the fields, value formats, units, result layouts, and placement required for that test type.
+2. **Blank COA templates:** Use these as the background templates for generating completed COAs.
+
+For each product/test type:
+
+- Identify the matching completed example and blank template.
+- Record the source filenames.
+- Create an inventory of the visible fields.
+- Separate shared COA metadata from test-specific fields.
+- Identify field types, units, repeated rows, and validation requirements supported by the examples.
+- Map each field to its location on the blank template.
+- Flag any unclear text, missing template, or ambiguous mapping.
+
+Do not invent scientific values, acceptance criteria, formulas, signatures, or approval details. Do not treat example results as defaults for new reports.
+
+If a template cannot be mapped confidently, leave that test type clearly marked as incomplete rather than silently generating an inaccurate report.
+
+## 5. Build the staff dashboard
+
+Use the Shopify theme’s visual styling as the starting point for the dashboard, adapted for efficient administrative work.
+
+Dr. Nishal and authorized staff should be able to:
+
+- Sign in securely.
+- View and search COA records.
+- Create a new COA.
+- Select the appropriate product/test type.
+- Complete a form containing the fields required for that test type.
+- Save a draft.
+- Preview the completed COA image.
+- Edit the draft and regenerate its preview.
+- Publish the COA for public verification.
+- Unpublish or archive a report when necessary.
+
+Use a clear separation between drafts and published records. Drafts must never appear in public searches or public storage.
+
+Include:
+
+- Appropriate administrator and staff permissions.
+- Server-side validation.
+- Clear required-field indicators.
+- Protection against accidental duplicate report identifiers.
+- Creation and modification timestamps.
+- An audit trail showing who created, changed, and published a report.
+
+Keep internal notes and staff-only information separate from public report data.
+
+Do not add customer notifications, order automation, billing, or other unrelated workflows unless the existing project explicitly requires them.
+
+## 6. Generate completed COA images
+
+When a staff member fills out a COA form, the application must generate a new WEBP image by placing the entered information onto the correct blank template.
+
+Requirements:
+
+- Preserve the original template’s dimensions, aspect ratio, branding, and visual quality.
+- Match text placement, alignment, font sizing, and formatting to the completed reference.
+- Handle multiline values and long text without clipping or overlapping other fields.
+- Preserve scientific symbols, units, and numeric precision.
+- Validate required information before allowing publication.
+- Let staff inspect the generated image before publishing.
+- Retain structured form data alongside the generated image.
+- Track generated versions so an updated report can be traced to its underlying data.
+
+Avoid destructive overwriting of published images. Use versioned object keys and an explicit published-version reference.
+
+A generated image should reproduce entered results; it must not calculate or infer scientific conclusions unless an authoritative rule is supplied in the project.
+
+## 7. Store images in Cloudflare R2
+
+Use Cloudflare R2 for generated COA images.
+
+Implement:
+
+- Server-side uploads.
+- Environment-based credentials and bucket configuration.
+- Separate access handling for private drafts and published assets.
+- Unique, versioned object keys.
+- Correct WEBP content types.
+- Appropriate caching for published assets.
+- Clear handling of upload failures and incomplete generation.
+
+Never expose R2 credentials in the Shopify theme or browser code.
+
+Document the bucket configuration, access requirements, and any public/custom asset domain settings needed for deployment.
+
+## 8. Integrate with Shopify
+
+Connect the application to these storefront experiences:
+
+### Verify COA
+
+Visitors should be able to look up a published COA using its unique report/verification identifier and any additional lookup fields justified by the existing theme and project references.
+
+Provide:
+
+- A clear search form.
+- Input validation.
+- Loading and error states.
+- A useful “no matching report” state.
+- Published report details and the generated COA image.
+- A stable link to the specific report.
+- A suitable view/download option.
+
+Only expose fields explicitly intended for public viewing. Do not make private client details searchable or publicly visible by default.
+
+### Test Reports
+
+Connect this page to published COA records.
+
+Use the existing page and project references to determine the intended presentation. Provide appropriate browsing, filtering, and pagination where needed.
+
+Both pages must use actual application data when configured. Clearly distinguish development fixtures from real records.
+
+Use a supported Shopify integration approach appropriate to the chosen architecture. Protect public endpoints against abusive requests, and ensure unpublished records cannot be retrieved by guessing identifiers or asset URLs.
+
+## 9. Prepare the project for Git and Render
+
+Make the implementation ready to commit and push to Git, and ready to deploy to Render using a Blueprint.
+
+Include:
+
+- A clear repository structure separating the Shopify theme and application.
+- `render.yaml` defining the required Render services and database resources.
+- `.env.example` containing variable names and safe placeholders.
+- `.gitignore` excluding secrets, dependencies, temporary files, and generated build output.
+- Database migrations.
+- Reproducible install, build, and start commands.
+- A health-check endpoint.
+- A README covering local setup, architecture, deployment, and ongoing maintenance.
+
+Use durable database and object storage. Do not rely on Render’s ephemeral filesystem for persistent reports or uploaded files.
+
+Document:
+
+- Required Shopify configuration and permissions.
+- Any app proxy, extension, or storefront setup.
+- Cloudflare R2 configuration.
+- Render environment variables.
+- Initial administrator setup.
+- Migration and backup procedures.
+- How staff create, preview, publish, and update a COA.
+- How to apply and preview the theme changes.
+
+Prepare the files for commit and deployment. Do not push to a remote repository, publish the live Shopify theme, or deploy production services unless I explicitly authorize those actions.
+
+## 10. Validate the implementation
+
+Run appropriate checks for:
+
+- Theme syntax and affected Shopify functionality.
+- Application build and core workflows.
+- Authentication and permissions.
+- Product-specific field validation.
+- COA rendering accuracy.
+- R2 integration.
+- Draft/public separation.
+- Verification searches and report browsing.
+- Mobile and desktop layouts.
+
+Use representative data for each supported template and visually inspect the generated images against the supplied examples. Mark all test data clearly and keep it out of public production results.
+
+If credentials or external services are unavailable, complete everything that can be implemented locally and state exactly which integration checks remain unverified. Do not claim those checks passed.
+
+## 11. Final handoff
+
+Complete the implementation rather than stopping after a plan or mockup.
+
+At the end, provide:
+
+1. A summary of what was implemented.
+2. The chosen architecture and why.
+3. A product/template mapping summary.
+4. Checks performed and their results.
+5. Any unresolved template ambiguities or blockers.
+6. The exact credentials and configuration still required.
+7. Steps to preview the theme, run the app locally, and deploy through the Render Blueprint.
+
+Prioritize a complete, maintainable workflow: staff enter verified results, preview the generated COA, publish it, and visitors retrieve the correct published report through Shopify.

@@ -1,0 +1,27 @@
+
+
+<rte-formatter>
+  {{ page.content }}
+</rte-formatter>
+<style>
+  /* Hide on desktop (screens wider than 768px) */
+@media (min-width: 769px) {
+  .mpx_category_group {
+    display: block !important;
+  }
+}
+
+/* Show on mobile */
+@media (max-width: 768px) {
+  .mpx_category_group {
+    display: block !important;
+  }
+}
+
+</style>
+{% schema %}
+{
+  "name": "t:names.page_content",
+  "class": "rte"
+}
+{% endschema %}

@@ -1,0 +1,684 @@
+{% doc %}
+  @prompt
+    Create a “Meet Our Specialists” section with a clean, modern medical design.
+    
+    SECTION STYLE:
+    - Full-width background in a deep blue tone with subtle abstract waves or curves.
+    - Centered heading group at the top.
+    - Small eyebrow label: “OUR DOCTORS”
+    - Large headline: “Meet Our Specialists”
+    - White text for headings.
+    
+    LAYOUT:
+    - Three evenly spaced profile cards in one row.
+    - Cards should have:
+      - White background
+      - Soft round corners (20–25px)
+      - Subtle shadow for depth
+      - Vertical layout inside each card
+    
+    CARD CONTENTS:
+    For each card include:
+    - A professional doctor portrait with a light, neutral background.
+    - Name in bold (e.g., “Dr. Wilbert Fletcher”)
+    - Title line below (e.g., “Dermatologist, DCRT (UK)”)
+    - A short placeholder description (one small line).
+    - A “View Profile →” link at the bottom.
+    
+    SPACING:
+    - Equal spacing between cards.
+    - Generous vertical padding above and below the section.
+    - Content centered and balanced like a premium medical website.
+    
+    OVERALL TONE:
+    - Clean, trustworthy, professional.
+    - Inspired by high-end healthcare website designs.
+    
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-specialists-section-{{ ai_gen_id }} {
+    background-color: {{ block.settings.background_color }};
+    padding: {{ block.settings.section_padding_top }}px 20px {{ block.settings.section_padding_bottom }}px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ai-specialists-section-{{ ai_gen_id }}::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: {{ block.settings.wave_overlay_color }};
+    opacity: {{ block.settings.wave_opacity | divided_by: 100.0 }};
+    pointer-events: none;
+  }
+
+  .ai-specialists-container-{{ ai_gen_id }} {
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ai-specialists-header-{{ ai_gen_id }} {
+    text-align: center;
+    margin-bottom: {{ block.settings.header_spacing }}px;
+  }
+
+  .ai-specialists-eyebrow-{{ ai_gen_id }} {
+    font-size: {{ block.settings.eyebrow_size }}px;
+    color: {{ block.settings.eyebrow_color }};
+    letter-spacing: 2px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .ai-specialists-heading-{{ ai_gen_id }} {
+    font-size: {{ block.settings.heading_size }}px;
+    color: {{ block.settings.heading_color }};
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .ai-specialists-grid-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: {{ block.settings.card_gap }}px;
+    margin-top: {{ block.settings.grid_top_spacing }}px;
+  }
+
+  .ai-specialist-card-{{ ai_gen_id }} {
+    background-color: {{ block.settings.card_background }};
+    border-radius: {{ block.settings.card_border_radius }}px;
+    overflow: hidden;
+    box-shadow: {{ block.settings.card_shadow_x }}px {{ block.settings.card_shadow_y }}px {{ block.settings.card_shadow_blur }}px {{ block.settings.card_shadow_color }};
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ai-specialist-card-{{ ai_gen_id }}:hover {
+    transform: translateY(-8px);
+    box-shadow: {{ block.settings.card_shadow_x }}px {{ block.settings.card_shadow_y | plus: 8 }}px {{ block.settings.card_shadow_blur | plus: 10 }}px {{ block.settings.card_shadow_color }};
+  }
+
+  .ai-specialist-image-wrapper-{{ ai_gen_id }} {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background-color: #f5f5f5;
+  }
+
+  .ai-specialist-image-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ai-specialist-image-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-specialist-image-placeholder-{{ ai_gen_id }} svg {
+    width: 60%;
+    height: 60%;
+    opacity: 0.3;
+  }
+
+  .ai-specialist-content-{{ ai_gen_id }} {
+    padding: {{ block.settings.card_padding }}px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ai-specialist-name-{{ ai_gen_id }} {
+    font-size: {{ block.settings.name_size }}px;
+    color: {{ block.settings.name_color }};
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+  }
+
+  .ai-specialist-title-{{ ai_gen_id }} {
+    font-size: {{ block.settings.title_size }}px;
+    color: {{ block.settings.title_color }};
+    margin: 0 0 16px 0;
+    line-height: 1.4;
+  }
+
+  .ai-specialist-description-{{ ai_gen_id }} {
+    font-size: {{ block.settings.description_size }}px;
+    color: {{ block.settings.description_color }};
+    line-height: 1.6;
+    margin: 0 0 20px 0;
+    flex-grow: 1;
+  }
+
+  .ai-specialist-link-{{ ai_gen_id }} {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: {{ block.settings.link_color }};
+    font-size: {{ block.settings.link_size }}px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease, gap 0.3s ease;
+  }
+
+  .ai-specialist-link-{{ ai_gen_id }}:hover {
+    color: {{ block.settings.link_hover_color }};
+    gap: 12px;
+  }
+
+  .ai-specialist-link-{{ ai_gen_id }} svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+  }
+
+  .ai-specialist-link-{{ ai_gen_id }}:hover svg {
+    transform: translateX(4px);
+  }
+
+  @media screen and (max-width: 989px) {
+    .ai-specialists-grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .ai-specialists-heading-{{ ai_gen_id }} {
+      font-size: {{ block.settings.heading_size | times: 0.7 }}px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-specialists-section-{{ ai_gen_id }} {
+      padding: {{ block.settings.section_padding_top | times: 0.6 }}px 16px {{ block.settings.section_padding_bottom | times: 0.6 }}px;
+    }
+
+    .ai-specialists-grid-{{ ai_gen_id }} {
+      grid-template-columns: 1fr;
+      gap: {{ block.settings.card_gap | times: 0.7 }}px;
+    }
+
+    .ai-specialists-heading-{{ ai_gen_id }} {
+      font-size: {{ block.settings.heading_size | times: 0.5 }}px;
+    }
+
+    .ai-specialist-content-{{ ai_gen_id }} {
+      padding: {{ block.settings.card_padding | times: 0.8 }}px;
+    }
+  }
+{% endstyle %}
+
+<div class="ai-specialists-section-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="ai-specialists-container-{{ ai_gen_id }}">
+    <div class="ai-specialists-header-{{ ai_gen_id }}">
+      {% if block.settings.eyebrow_text != blank %}
+        <span class="ai-specialists-eyebrow-{{ ai_gen_id }}">{{ block.settings.eyebrow_text }}</span>
+      {% endif %}
+      {% if block.settings.heading != blank %}
+        <h2 class="ai-specialists-heading-{{ ai_gen_id }}">{{ block.settings.heading }}</h2>
+      {% endif %}
+    </div>
+
+    <div class="ai-specialists-grid-{{ ai_gen_id }}">
+      {% for i in (1..3) %}
+        {% liquid
+          assign image_key = 'specialist_' | append: i | append: '_image'
+          assign name_key = 'specialist_' | append: i | append: '_name'
+          assign title_key = 'specialist_' | append: i | append: '_title'
+          assign description_key = 'specialist_' | append: i | append: '_description'
+          assign link_key = 'specialist_' | append: i | append: '_link'
+
+          assign specialist_image = block.settings[image_key]
+          assign specialist_name = block.settings[name_key]
+          assign specialist_title = block.settings[title_key]
+          assign specialist_description = block.settings[description_key]
+          assign specialist_link = block.settings[link_key]
+        %}
+
+        <div class="ai-specialist-card-{{ ai_gen_id }}">
+          <div class="ai-specialist-image-wrapper-{{ ai_gen_id }}">
+            {% if specialist_image %}
+              <img
+                src="{{ specialist_image | image_url: width: 600 }}"
+                alt="{{ specialist_name | escape }}"
+                loading="lazy"
+                width="600"
+                height="600"
+                class="ai-specialist-image-{{ ai_gen_id }}"
+              >
+            {% else %}
+              <div class="ai-specialist-image-placeholder-{{ ai_gen_id }}">
+                {{ 'image' | placeholder_svg_tag }}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="ai-specialist-content-{{ ai_gen_id }}">
+            {% if specialist_name != blank %}
+              <h3 class="ai-specialist-name-{{ ai_gen_id }}">{{ specialist_name }}</h3>
+            {% endif %}
+
+            {% if specialist_title != blank %}
+              <p class="ai-specialist-title-{{ ai_gen_id }}">{{ specialist_title }}</p>
+            {% endif %}
+
+            {% if specialist_description != blank %}
+              <div class="ai-specialist-description-{{ ai_gen_id }}">{{ specialist_description }}</div>
+            {% endif %}
+
+            {% if specialist_link != blank %}
+              <a href="{{ specialist_link }}" class="ai-specialist-link-{{ ai_gen_id }}">
+                {{ block.settings.link_text }}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Meet our specialists",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section header"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow_text",
+      "label": "Eyebrow text",
+      "default": "OUR DOCTORS"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Meet Our Specialists"
+    },
+    {
+      "type": "range",
+      "id": "eyebrow_size",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Eyebrow size",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "min": 24,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Heading size",
+      "default": 48
+    },
+    {
+      "type": "color",
+      "id": "eyebrow_color",
+      "label": "Eyebrow color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Specialist 1"
+    },
+    {
+      "type": "image_picker",
+      "id": "specialist_1_image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "specialist_1_name",
+      "label": "Name",
+      "default": "Dr. Wilbert Fletcher"
+    },
+    {
+      "type": "text",
+      "id": "specialist_1_title",
+      "label": "Title",
+      "default": "Dermatologist, DCRT (UK)"
+    },
+    {
+      "type": "richtext",
+      "id": "specialist_1_description",
+      "label": "Description",
+      "default": "<p>Board-certified specialist with over 15 years of experience in advanced dermatological care.</p>"
+    },
+    {
+      "type": "url",
+      "id": "specialist_1_link",
+      "label": "Profile link"
+    },
+    {
+      "type": "header",
+      "content": "Specialist 2"
+    },
+    {
+      "type": "image_picker",
+      "id": "specialist_2_image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "specialist_2_name",
+      "label": "Name",
+      "default": "Dr. Sarah Mitchell"
+    },
+    {
+      "type": "text",
+      "id": "specialist_2_title",
+      "label": "Title",
+      "default": "Clinical Pathologist, MD"
+    },
+    {
+      "type": "richtext",
+      "id": "specialist_2_description",
+      "label": "Description",
+      "default": "<p>Expert in diagnostic medicine with a focus on precision testing and patient-centered care.</p>"
+    },
+    {
+      "type": "url",
+      "id": "specialist_2_link",
+      "label": "Profile link"
+    },
+    {
+      "type": "header",
+      "content": "Specialist 3"
+    },
+    {
+      "type": "image_picker",
+      "id": "specialist_3_image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "specialist_3_name",
+      "label": "Name",
+      "default": "Dr. James Chen"
+    },
+    {
+      "type": "text",
+      "id": "specialist_3_title",
+      "label": "Title",
+      "default": "Medical Director, PhD"
+    },
+    {
+      "type": "richtext",
+      "id": "specialist_3_description",
+      "label": "Description",
+      "default": "<p>Leading researcher in laboratory medicine with extensive clinical and academic expertise.</p>"
+    },
+    {
+      "type": "url",
+      "id": "specialist_3_link",
+      "label": "Profile link"
+    },
+    {
+      "type": "header",
+      "content": "Link settings"
+    },
+    {
+      "type": "text",
+      "id": "link_text",
+      "label": "Link text",
+      "default": "View Profile"
+    },
+    {
+      "type": "range",
+      "id": "link_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Link size",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "link_color",
+      "label": "Link color",
+      "default": "#4281ff"
+    },
+    {
+      "type": "color",
+      "id": "link_hover_color",
+      "label": "Link hover color",
+      "default": "#2351a4"
+    },
+    {
+      "type": "header",
+      "content": "Section style"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#1a4d8f"
+    },
+    {
+      "type": "color",
+      "id": "wave_overlay_color",
+      "label": "Wave overlay color",
+      "default": "#2351a4"
+    },
+    {
+      "type": "range",
+      "id": "wave_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "label": "Wave opacity",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "section_padding_top",
+      "min": 40,
+      "max": 150,
+      "step": 10,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "section_padding_bottom",
+      "min": 40,
+      "max": 150,
+      "step": 10,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Card style"
+    },
+    {
+      "type": "color",
+      "id": "card_background",
+      "label": "Card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "card_border_radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Card border radius",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "card_padding",
+      "min": 20,
+      "max": 60,
+      "step": 4,
+      "unit": "px",
+      "label": "Card padding",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "min": 16,
+      "max": 60,
+      "step": 4,
+      "unit": "px",
+      "label": "Gap between cards",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "card_shadow_x",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "unit": "px",
+      "label": "Shadow X offset",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "card_shadow_y",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "label": "Shadow Y offset",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "card_shadow_blur",
+      "min": 10,
+      "max": 60,
+      "step": 5,
+      "unit": "px",
+      "label": "Shadow blur",
+      "default": 30
+    },
+    {
+      "type": "color",
+      "id": "card_shadow_color",
+      "label": "Shadow color",
+      "default": "rgba(0, 0, 0, 0.1)"
+    },
+    {
+      "type": "header",
+      "content": "Card content"
+    },
+    {
+      "type": "range",
+      "id": "name_size",
+      "min": 16,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "label": "Name size",
+      "default": 22
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Title size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "description_size",
+      "min": 12,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "label": "Description size",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "name_color",
+      "label": "Name color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "description_color",
+      "label": "Description color",
+      "default": "#383838"
+    },
+    {
+      "type": "header",
+      "content": "Layout spacing"
+    },
+    {
+      "type": "range",
+      "id": "header_spacing",
+      "min": 30,
+      "max": 80,
+      "step": 5,
+      "unit": "px",
+      "label": "Header bottom spacing",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "grid_top_spacing",
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "unit": "px",
+      "label": "Grid top spacing",
+      "default": 20
+    }
+  ],
+  "presets": [
+    {
+      "name": "Meet our specialists"
+    }
+  ]
+}
+{% endschema %}

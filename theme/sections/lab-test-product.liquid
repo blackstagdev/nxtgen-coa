@@ -1,0 +1,232 @@
+{%- comment -%}
+  Laboratory test product page. Uses only real product data (media, description,
+  variants, custom.technique_options metafield) plus editable section content.
+  The order form (snippets/order-test-form.liquid) keeps the original cart contract:
+  native POST to /cart/add, quantity 1, same line-item property names.
+{%- endcomment -%}
+{{ 'nga-coa.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign techniques = product.metafields.custom.technique_options.value
+  assign images = product.media | where: 'media_type', 'image'
+  assign back = section.settings.back_collection
+  if back == blank
+    assign back = collections['order-test']
+  endif
+  assign has_min = false
+  for v in product.variants
+    assign t = techniques | where: 'technique', v.title | first
+    if t.min_samples_needed.value > 1
+      assign has_min = true
+    endif
+  endfor
+-%}
+
+<script type="application/ld+json">{{ product | structured_data }}</script>
+
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+<div
+  class="section section--page-width color-{{ section.settings.color_scheme }} nga nga-pdp"
+  style="--nga-accent-color: {{ section.settings.accent }};"
+>
+  <div class="spacing-style" style="{% render 'spacing-style', settings: section.settings %}">
+    <nav class="nga-crumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="{{ routes.root_url }}">Home</a></li>
+        {%- if back != blank -%}<li><a href="{{ back.url }}">{{ back.title | escape }}</a></li>{%- endif -%}
+        <li><span aria-current="page">{{ product.title | escape }}</span></li>
+      </ol>
+    </nav>
+
+    <div class="nga-pdp__top">
+      {%- comment -%} ---------- Sample report gallery ---------- {%- endcomment -%}
+      <div class="nga-pdp__media">
+        {%- if images.size > 0 -%}
+          {%- assign main_alt = images.first.alt | default: product.title -%}
+          <figure class="nga-pdp__doc">
+            <a href="{{ images.first | image_url: width: 2000 }}" target="_blank" rel="noopener" data-main-link>
+              {{ images.first | image_url: width: 1400 | image_tag:
+                  class: 'nga-pdp__doc-img',
+                  loading: 'eager',
+                  fetchpriority: 'high',
+                  sizes: '(min-width: 990px) 55vw, 100vw',
+                  alt: main_alt
+              }}
+            </a>
+            <figcaption>
+              <span>{{ section.settings.media_caption | escape }}</span>
+              <a href="{{ images.first | image_url: width: 2000 }}" target="_blank" rel="noopener" data-main-link>Open full size<span class="visually-hidden"> (opens in a new tab)</span></a>
+            </figcaption>
+          </figure>
+          {%- if images.size > 1 -%}
+            <ul class="nga-pdp__thumbs" aria-label="Report pages">
+              {%- for img in images limit: 8 -%}
+                <li>
+                  <button
+                    type="button"
+                    class="nga-pdp__thumb"
+                    data-thumb
+                    data-src="{{ img | image_url: width: 1400 }}"
+                    data-full="{{ img | image_url: width: 2000 }}"
+                    data-alt="{{ img.alt | default: product.title | escape }}"
+                    aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+                    aria-label="Show image {{ forloop.index }} of {{ images.size }}"
+                  >
+                    {{ img | image_url: width: 200 | image_tag: loading: 'lazy', alt: '' }}
+                  </button>
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+
+      {%- comment -%} ---------- Order panel ---------- {%- endcomment -%}
+      <div class="nga-pdp__panel">
+        {%- if section.settings.eyebrow != blank -%}<p class="nga__eyebrow">{{ section.settings.eyebrow | escape }}</p>{%- endif -%}
+        <h1 class="nga-pdp__title">{{ product.title | escape }}</h1>
+        {%- assign summary = product.description | replace: '</li>', ' </li>' | replace: '</p>', ' </p>' | replace: '<br>', ' ' | strip_html | strip_newlines | strip | truncatewords: section.settings.summary_words -%}
+        {%- if section.settings.show_summary and summary != blank -%}
+          <p class="nga-pdp__summary">{{ summary }} <a href="#about-{{ section.id }}">Read more</a></p>
+        {%- endif -%}
+
+        <div class="nga-pdp__card">
+          {% render 'order-test-form', product: product, variant_style: 'cards' %}
+        </div>
+
+        {%- if section.settings.assurance_1 != blank or section.settings.assurance_2 != blank -%}
+          <ul class="nga-pdp__assure">
+            {%- if section.settings.assurance_1 != blank -%}
+              <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2l6 2.5v4.6c0 4-2.6 7.2-6 8.9-3.4-1.7-6-4.9-6-8.9V4.5L10 2z" stroke="currentColor" stroke-width="1.4"/><path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>{{ section.settings.assurance_1 | escape }}</li>
+            {%- endif -%}
+            {%- if section.settings.assurance_2 != blank -%}
+              <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="2.5" width="14" height="15" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M6.5 7h7M6.5 10h7M6.5 13h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>{{ section.settings.assurance_2 | escape }}</li>
+            {%- endif -%}
+          </ul>
+        {%- endif -%}
+      </div>
+    </div>
+
+    {%- comment -%} ---------- Details ---------- {%- endcomment -%}
+    <div class="nga-pdp__details">
+      <section class="nga-pdp__about" id="about-{{ section.id }}" aria-labelledby="about-title-{{ section.id }}">
+        <h2 class="nga-pdp__h2" id="about-title-{{ section.id }}">{{ section.settings.about_heading | escape }}</h2>
+        {%- if product.description != blank -%}
+          <div class="nga-pdp__rte rte">{{ product.description }}</div>
+        {%- else -%}
+          <p class="nga-hint">Details for this test are available on request.</p>
+        {%- endif -%}
+
+        {%- unless product.has_only_default_variant -%}
+          <h3 class="nga-pdp__h3">{{ section.settings.options_heading | escape }}</h3>
+          <div class="nga-pdp__table-wrap">
+            <table class="nga-table nga-pdp__table">
+              <caption class="visually-hidden">Sample types and prices for {{ product.title | escape }}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Sample type</th>
+                  <th scope="col">Price</th>
+                  {%- if has_min -%}<th scope="col">Minimum samples</th>{%- endif -%}
+                  <th scope="col">Availability</th>
+                </tr>
+              </thead>
+              <tbody>
+                {%- for v in product.variants -%}
+                  {%- assign t = techniques | where: 'technique', v.title | first -%}
+                  <tr>
+                    <td class="nga-table__primary" data-label="Sample type"><span class="nga-table__sample">{{ v.title | escape }}</span></td>
+                    <td data-label="Price">{{ v.price | money }}</td>
+                    {%- if has_min -%}<td data-label="Minimum">{{ t.min_samples_needed.value | default: 1 }}</td>{%- endif -%}
+                    <td data-label="Availability">{% if v.available %}Available{% else %}Sold out{% endif %}</td>
+                  </tr>
+                {%- endfor -%}
+              </tbody>
+            </table>
+          </div>
+        {%- endunless -%}
+      </section>
+
+      <aside class="nga-pdp__aside">
+        {%- if section.settings.show_steps -%}
+          <section class="nga-pdp__box" aria-labelledby="steps-{{ section.id }}">
+            <h2 class="nga-pdp__box-title" id="steps-{{ section.id }}">{{ section.settings.steps_heading | escape }}</h2>
+            <ol class="nga-steps">
+              {%- if section.settings.step_1 != blank -%}<li>{{ section.settings.step_1 | escape }}</li>{%- endif -%}
+              {%- if section.settings.step_2 != blank -%}<li>{{ section.settings.step_2 | escape }}</li>{%- endif -%}
+              {%- if section.settings.step_3 != blank -%}<li>{{ section.settings.step_3 | escape }}</li>{%- endif -%}
+            </ol>
+          </section>
+        {%- endif -%}
+        {%- if section.settings.show_receive -%}
+          <section class="nga-pdp__box" aria-labelledby="receive-{{ section.id }}">
+            <h2 class="nga-pdp__box-title" id="receive-{{ section.id }}">{{ section.settings.receive_heading | escape }}</h2>
+            <ul class="nga-pdp__checks">
+              {%- if section.settings.receive_1 != blank -%}<li>{{ section.settings.receive_1 | escape }}</li>{%- endif -%}
+              {%- if section.settings.receive_2 != blank -%}<li>{{ section.settings.receive_2 | escape }}</li>{%- endif -%}
+              {%- if section.settings.receive_3 != blank -%}<li>{{ section.settings.receive_3 | escape }}</li>{%- endif -%}
+            </ul>
+            {%- if section.settings.verify_link != blank -%}
+              <p class="nga-pdp__box-link"><a href="{{ section.settings.verify_link }}">{{ section.settings.verify_label | escape }}</a></p>
+            {%- endif -%}
+          </section>
+        {%- endif -%}
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var root = document.currentScript && document.currentScript.previousElementSibling;
+    if (!root) return;
+    var img = root.querySelector('.nga-pdp__doc-img');
+    var links = root.querySelectorAll('[data-main-link]');
+    root.querySelectorAll('[data-thumb]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (!img) return;
+        img.removeAttribute('srcset');
+        img.src = btn.dataset.src;
+        img.alt = btn.dataset.alt || '';
+        links.forEach(function (a) { a.href = btn.dataset.full; });
+        root.querySelectorAll('[data-thumb]').forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+      });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Lab test product",
+  "class": "section-wrapper",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Laboratory test" },
+    { "type": "collection", "id": "back_collection", "label": "Breadcrumb collection", "info": "Defaults to the \"order-test\" collection." },
+    { "type": "checkbox", "id": "show_summary", "label": "Show short description under the title", "default": true },
+    { "type": "range", "id": "summary_words", "label": "Short description length (words)", "min": 10, "max": 60, "step": 2, "default": 30 },
+    { "type": "text", "id": "media_caption", "label": "Image caption", "default": "Sample report — for illustration" },
+    { "type": "header", "content": "Assurances (under the form)" },
+    { "type": "text", "id": "assurance_1", "label": "Line 1", "default": "Every certificate carries a unique verification key" },
+    { "type": "text", "id": "assurance_2", "label": "Line 2", "default": "Results can be checked online on the Verify COA page" },
+    { "type": "header", "content": "Details" },
+    { "type": "text", "id": "about_heading", "label": "Description heading", "default": "About this test" },
+    { "type": "text", "id": "options_heading", "label": "Sample types heading", "default": "Sample types and pricing" },
+    { "type": "checkbox", "id": "show_steps", "label": "Show ordering steps", "default": true },
+    { "type": "text", "id": "steps_heading", "label": "Steps heading", "default": "How ordering works" },
+    { "type": "text", "id": "step_1", "label": "Step 1" },
+    { "type": "text", "id": "step_2", "label": "Step 2" },
+    { "type": "text", "id": "step_3", "label": "Step 3" },
+    { "type": "checkbox", "id": "show_receive", "label": "Show “What you receive”", "default": true },
+    { "type": "text", "id": "receive_heading", "label": "Heading", "default": "What you receive" },
+    { "type": "text", "id": "receive_1", "label": "Item 1", "default": "A Certificate of Analysis issued by NxtGen Analysis" },
+    { "type": "text", "id": "receive_2", "label": "Item 2", "default": "A unique verification key printed on the certificate" },
+    { "type": "text", "id": "receive_3", "label": "Item 3", "default": "Online verification of the published report" },
+    { "type": "text", "id": "verify_label", "label": "Verify link label", "default": "How verification works" },
+    { "type": "url", "id": "verify_link", "label": "Verify link" },
+    { "type": "header", "content": "Style" },
+    { "type": "color_scheme", "id": "color_scheme", "label": "Color scheme", "default": "scheme-1" },
+    { "type": "color", "id": "accent", "label": "Accent color", "default": "#701379" },
+    { "type": "range", "id": "padding-block-start", "label": "Top padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 24 },
+    { "type": "range", "id": "padding-block-end", "label": "Bottom padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 }
+  ]
+}
+{% endschema %}

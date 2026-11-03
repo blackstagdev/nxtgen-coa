@@ -1,0 +1,53 @@
+<%
+  const f = it.field;
+  const id = 'f-' + f.key;
+  const err = it.error;
+  const helpId = f.help || f.patternHint ? id + '-help' : '';
+  const errId = err ? id + '-err' : '';
+  const describedBy = [helpId, errId].filter(Boolean).join(' ');
+  const val = it.value;
+  const strVal = Array.isArray(val) ? '' : (val ?? '');
+  const disabled = it.disabled ? 'disabled' : '';
+%>
+<div class="field span-<%= f.span || (f.type === 'multiline' ? 12 : 6) %><%= err ? ' field--invalid' : '' %>" data-field="<%= f.key %>">
+  <% if (f.type === 'image') { %>
+  <span class="label" id="<%= id %>-label"><%= f.label %><% if (f.required) { %><span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (required)</span><% } %></span>
+  <div class="upload" data-upload data-field-key="<%= f.key %>" data-max="<%= f.maxImages || 1 %>" data-report="<%= it.reportId %>" aria-labelledby="<%= id %>-label" role="group">
+    <div class="upload__list" data-list>
+      <% for (const uid of (Array.isArray(val) ? val : val ? [val] : [])) { %>
+      <div class="upload__item" data-item>
+        <img src="/admin/reports/<%= it.reportId %>/uploads/<%= uid %>" alt="<%= f.label %> upload">
+        <input type="hidden" name="f[<%= f.key %>][]" value="<%= uid %>">
+        <% if (!it.disabled) { %><button type="button" data-remove>Remove</button><% } %>
+      </div>
+      <% } %>
+    </div>
+    <% if (!it.disabled) { %>
+    <div class="upload__controls">
+      <label class="btn btn--secondary btn--sm" for="<%= id %>">Choose image</label>
+      <input class="visually-hidden" type="file" id="<%= id %>" accept="image/png,image/jpeg,image/webp" data-input <%~ describedBy ? 'aria-describedby="' + describedBy + '"' : '' %>>
+      <span>or drop a PNG, JPEG or WEBP here<%= (f.maxImages || 1) > 1 ? ' (up to ' + f.maxImages + ')' : '' %></span>
+    </div>
+    <p class="upload__status" data-status role="status" aria-live="polite"></p>
+    <% } %>
+  </div>
+  <% } else { %>
+  <label for="<%= id %>"><%= f.label %><% if (f.required) { %><span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (required)</span><% } %></label>
+  <% if (f.type === 'multiline') { %>
+  <textarea id="<%= id %>" name="f[<%= f.key %>]" maxlength="<%= f.maxLength || 600 %>" <%~ f.required ? 'aria-required="true"' : '' %> <%~ describedBy ? 'aria-describedby="' + describedBy + '"' : '' %> <%~ err ? 'aria-invalid="true"' : '' %> <%= disabled %>><%= strVal %></textarea>
+  <% } else if (f.type === 'enum') { %>
+  <select id="<%= id %>" name="f[<%= f.key %>]" <%~ f.required ? 'aria-required="true"' : '' %> <%~ describedBy ? 'aria-describedby="' + describedBy + '"' : '' %> <%~ err ? 'aria-invalid="true"' : '' %> <%= disabled %>>
+    <option value="">Select…</option>
+    <% for (const o of f.options) { %><option value="<%= o %>" <%~ strVal === o ? 'selected' : '' %>><%= o %></option><% } %>
+  </select>
+  <% } else { %>
+  <% const type = f.type === 'date' ? 'date' : f.type === 'email' ? 'email' : 'text' %>
+  <% const mode = f.type === 'decimal' ? 'inputmode="decimal"' : f.type === 'integer' ? 'inputmode="numeric"' : '' %>
+  <% if (f.unit) { %><div class="input-unit"><% } %>
+  <input type="<%= type %>" id="<%= id %>" name="f[<%= f.key %>]" value="<%= strVal %>" <%~ mode %> maxlength="<%= f.maxLength || 120 %>" placeholder="<%= f.placeholder || '' %>" autocomplete="off" spellcheck="false" <%~ f.required ? 'aria-required="true"' : '' %> <%~ describedBy ? 'aria-describedby="' + describedBy + '"' : '' %> <%~ err ? 'aria-invalid="true"' : '' %> <%= disabled %>>
+  <% if (f.unit) { %><span aria-hidden="true"><%= f.unit %></span></div><% } %>
+  <% } %>
+  <% } %>
+  <% if (helpId) { %><p class="field__help" id="<%= helpId %>"><%= f.help || f.patternHint %></p><% } %>
+  <% if (err) { %><p class="field__error" id="<%= errId %>"><%= err %></p><% } %>
+</div>

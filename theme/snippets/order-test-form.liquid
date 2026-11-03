@@ -1,0 +1,262 @@
+{%- doc -%}
+  Test order form for laboratory-test products. Keeps the original cart contract exactly:
+  - native POST to /cart/add with quantity 1 (cart and checkout unchanged)
+  - the same line-item property names (Client Name, Sample Name, Lot #, Batch #,
+    Number of Samples, _unique_id) that existing order handling relies on
+  - minimum "Number of Samples" from product.metafields.custom.technique_options
+    (metaobjects with `technique` = variant title and `min_samples_needed`)
+
+  @param {product} product - The product being ordered
+  @param {string} [variant_style] - 'cards' (radio cards) or 'select' (default)
+{%- enddoc -%}
+{%- liquid
+  assign uid = 'otf-' | append: product.id
+  assign current = product.selected_or_first_available_variant
+  assign techniques = product.metafields.custom.technique_options.value
+  assign style = variant_style | default: 'select'
+  if product.variants.size > 6
+    assign style = 'select'
+  endif
+-%}
+{{ 'nga-coa.css' | asset_url | stylesheet_tag }}
+
+<div class="nga order-test-form" id="{{ uid }}">
+  <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" novalidate data-order-form>
+    <input type="hidden" name="form_type" value="product">
+    <input type="hidden" name="utf8" value="✓">
+    <input type="hidden" name="properties[_unique_id]" data-unique-id>
+    <input type="hidden" name="quantity" value="1">
+
+    <div class="order-test-form__price-row">
+      <p class="order-test-form__price" data-price aria-live="polite">{%- if current -%}{{ current.price | money }}{%- endif -%}</p>
+      <p class="order-test-form__price-note">Price per order</p>
+    </div>
+
+    {%- if product.has_only_default_variant -%}
+      <input type="hidden" name="id" value="{{ current.id }}">
+    {%- elsif style == 'cards' -%}
+      <fieldset class="order-test-form__step">
+        <legend class="order-test-form__legend"><span aria-hidden="true">1</span>Choose sample type<span class="nga-req" aria-hidden="true">*</span></legend>
+        <div class="otf-options" role="radiogroup">
+          {%- for variant in product.variants -%}
+            {%- assign technique = techniques | where: 'technique', variant.title | first -%}
+            <label class="otf-option{% unless variant.available %} otf-option--disabled{% endunless %}">
+              <input
+                type="radio"
+                name="id"
+                value="{{ variant.id }}"
+                data-variant
+                data-min="{{ technique.min_samples_needed.value | default: 1 }}"
+                data-price="{{ variant.price | money | escape }}"
+                {% if variant == current %}checked{% endif %}
+                {% unless variant.available %}disabled{% endunless %}
+              >
+              <span class="otf-option__name">{{ variant.title | escape }}</span>
+              <span class="otf-option__price">{% if variant.available %}{{ variant.price | money }}{% else %}Sold out{% endif %}</span>
+              {%- if technique.min_samples_needed.value > 1 -%}
+                <span class="otf-option__meta">Min. {{ technique.min_samples_needed.value }} samples</span>
+              {%- endif -%}
+            </label>
+          {%- endfor -%}
+        </div>
+      </fieldset>
+    {%- else -%}
+      <div class="nga-field">
+        <label for="{{ uid }}-variant">Sample type<span class="nga-req" aria-hidden="true">*</span></label>
+        <select class="nga-select" id="{{ uid }}-variant" name="id" data-variant-select required aria-required="true">
+          {%- for variant in product.variants -%}
+            {%- assign technique = techniques | where: 'technique', variant.title | first -%}
+            <option
+              value="{{ variant.id }}"
+              data-min="{{ technique.min_samples_needed.value | default: 1 }}"
+              data-price="{{ variant.price | money | escape }}"
+              {% if variant == current %}selected{% endif %}
+              {% unless variant.available %}disabled{% endunless %}
+            >
+              {{ variant.title | escape }} — {% if variant.available %}{{ variant.price | money_without_trailing_zeros }}{% else %}Sold out{% endif %}
+            </option>
+          {%- endfor -%}
+        </select>
+      </div>
+    {%- endif -%}
+
+    <fieldset class="order-test-form__step">
+      <legend class="order-test-form__legend">
+        {%- unless product.has_only_default_variant or style != 'cards' -%}<span aria-hidden="true">2</span>{%- else -%}<span aria-hidden="true">1</span>{%- endunless -%}
+        Sample details
+      </legend>
+      <p class="nga-hint">Printed on your certificate as entered. Fields marked <span class="nga-req" aria-hidden="true">*</span><span class="visually-hidden">with an asterisk</span> are required.</p>
+
+      <div class="nga-field">
+        <label for="{{ uid }}-client">Client name<span class="nga-req" aria-hidden="true">*</span></label>
+        <input class="nga-input" type="text" id="{{ uid }}-client" name="properties[Client Name]" autocomplete="organization" maxlength="120" required aria-required="true">
+      </div>
+      <div class="nga-field">
+        <label for="{{ uid }}-sample">Sample name<span class="nga-req" aria-hidden="true">*</span></label>
+        <input class="nga-input" type="text" id="{{ uid }}-sample" name="properties[Sample Name]" maxlength="120" required aria-required="true">
+      </div>
+      <div class="order-test-form__row">
+        <div class="nga-field">
+          <label for="{{ uid }}-lot">Lot #<span class="nga-req" aria-hidden="true">*</span></label>
+          <input class="nga-input" type="text" id="{{ uid }}-lot" name="properties[Lot #]" maxlength="60" required aria-required="true">
+        </div>
+        <div class="nga-field">
+          <label for="{{ uid }}-batch">Batch #<span class="nga-req" aria-hidden="true">*</span></label>
+          <input class="nga-input" type="text" id="{{ uid }}-batch" name="properties[Batch #]" maxlength="60" required aria-required="true">
+        </div>
+      </div>
+      <div class="nga-field">
+        <label for="{{ uid }}-num">Number of samples<span class="nga-req" aria-hidden="true">*</span></label>
+        <div class="otf-stepper">
+          <button type="button" class="otf-stepper__btn" data-step="-1" aria-label="Fewer samples">−</button>
+          <input class="nga-input" type="number" id="{{ uid }}-num" name="properties[Number of Samples]" min="1" step="1" value="1" inputmode="numeric" required aria-required="true" aria-describedby="{{ uid }}-num-hint" data-samples>
+          <button type="button" class="otf-stepper__btn" data-step="1" aria-label="More samples">+</button>
+        </div>
+        <p class="nga-hint" id="{{ uid }}-num-hint" data-min-hint></p>
+      </div>
+    </fieldset>
+
+    <div class="nga-status nga-status--err" role="alert" data-errors hidden>
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v6m0 3.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <div><strong>Please complete the highlighted fields.</strong><ul data-error-list></ul></div>
+    </div>
+
+    <button class="button order-test-form__submit" type="submit" data-submit {% unless current.available %}disabled{% endunless %}>
+      {%- if current.available -%}Add to cart{%- else -%}Sold out{%- endif -%}
+    </button>
+  </form>
+</div>
+
+<style>
+  .order-test-form { display: block; text-align: left; }
+  .order-test-form form { display: grid; gap: 22px; }
+  .order-test-form__price-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--nga-line); }
+  .order-test-form__price { margin: 0; font-family: var(--font-heading--family); font-size: clamp(1.6rem, 1.3rem + 1vw, 2rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .order-test-form__price-note { margin: 0; font-size: 0.8rem; color: var(--nga-muted); }
+  .order-test-form__step { display: grid; gap: 14px; margin: 0; padding: 0; border: 0; min-width: 0; }
+  .order-test-form__legend { display: flex; align-items: center; gap: 10px; padding: 0; margin-bottom: 2px; font-family: var(--font-heading--family); font-size: 1.05rem; font-weight: 700; }
+  .order-test-form__legend > span[aria-hidden='true']:first-child { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--nga-accent); color: #fff; font-size: 0.8rem; }
+  .order-test-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .order-test-form__submit { width: 100%; min-height: 56px; font-size: 0.9rem; }
+  .order-test-form [data-error-list] { margin: 6px 0 0; padding-left: 18px; }
+  .order-test-form [data-error-list] a { color: inherit; }
+  .otf-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .otf-option { position: relative; display: grid; gap: 2px; padding: 14px 16px; border: 1px solid var(--nga-line-strong); background: var(--color-input-background, #fff); cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+  .otf-option input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .otf-option__name { font-weight: 700; }
+  .otf-option__price { font-variant-numeric: tabular-nums; color: var(--nga-ink); }
+  .otf-option__meta { font-size: 0.78rem; color: var(--nga-muted); }
+  .otf-option:hover { border-color: var(--nga-ink); }
+  .otf-option:has(input:checked) { border-color: var(--nga-accent); box-shadow: inset 0 0 0 1px var(--nga-accent); background: color-mix(in srgb, var(--nga-accent) 6%, #fff); }
+  .otf-option:has(input:focus-visible) { outline: 2px solid var(--nga-accent-2); outline-offset: 2px; }
+  .otf-option--disabled { opacity: 0.5; cursor: not-allowed; }
+  .otf-option--disabled .otf-option__price { text-decoration: none; }
+  .otf-stepper { display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; }
+  .otf-stepper .nga-input { text-align: center; border-inline: 0; -moz-appearance: textfield; }
+  .otf-stepper .nga-input::-webkit-outer-spin-button,
+  .otf-stepper .nga-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .otf-stepper__btn { border: 1px solid var(--color-input-border, var(--nga-line-strong)); background: var(--nga-soft); font-size: 1.3rem; line-height: 1; cursor: pointer; color: inherit; }
+  .otf-stepper__btn:hover { background: var(--nga-line); }
+  .otf-stepper__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  @media screen and (max-width: 480px) { .order-test-form__row { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById('{{ uid }}');
+    if (!root || root.dataset.ready) return;
+    root.dataset.ready = '1';
+    var form = root.querySelector('[data-order-form]');
+    var select = root.querySelector('[data-variant-select]');
+    var radios = Array.prototype.slice.call(root.querySelectorAll('[data-variant]'));
+    var samples = root.querySelector('[data-samples]');
+    var minHint = root.querySelector('[data-min-hint]');
+    var price = root.querySelector('[data-price]');
+    var submit = root.querySelector('[data-submit]');
+    var errors = root.querySelector('[data-errors]');
+    var errorList = root.querySelector('[data-error-list]');
+    var minus = root.querySelector('[data-step="-1"]');
+
+    function selected() {
+      if (select) return select.options[select.selectedIndex];
+      for (var i = 0; i < radios.length; i++) if (radios[i].checked) return radios[i];
+      return null;
+    }
+    function minSamples() {
+      var opt = selected();
+      var m = parseInt((opt && opt.dataset.min) || '1', 10);
+      return isNaN(m) || m < 1 ? 1 : m;
+    }
+    function applyVariant() {
+      var opt = selected();
+      var min = minSamples();
+      samples.min = String(min);
+      if ((parseInt(samples.value, 10) || 0) < min) samples.value = String(min);
+      minHint.textContent = min > 1 ? 'Minimum ' + min + ' samples for this sample type.' : '';
+      if (opt && price && opt.dataset.price) price.textContent = opt.dataset.price;
+      var unavailable = !opt || opt.disabled;
+      submit.disabled = unavailable;
+      submit.textContent = !opt ? 'Choose a sample type' : unavailable ? 'Sold out' : 'Add to cart';
+      updateStepper();
+    }
+    function updateStepper() {
+      if (minus) minus.disabled = (parseInt(samples.value, 10) || 0) <= minSamples();
+    }
+    if (select) select.addEventListener('change', applyVariant);
+    radios.forEach(function (r) { r.addEventListener('change', applyVariant); });
+    root.querySelectorAll('[data-step]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var n = (parseInt(samples.value, 10) || 0) + parseInt(btn.dataset.step, 10);
+        samples.value = String(Math.max(minSamples(), Math.min(999, n)));
+        samples.dispatchEvent(new Event('input', { bubbles: true }));
+        updateStepper();
+      });
+    });
+    samples.addEventListener('input', updateStepper);
+    applyVariant();
+
+    function labelFor(input) {
+      var l = root.querySelector('label[for="' + input.id + '"]');
+      return l ? l.textContent.replace('*', '').trim() : input.name;
+    }
+
+    form.addEventListener('submit', function (e) {
+      var invalid = [];
+      errorList.replaceChildren();
+      if (!selected()) invalid.push(radios[0]);
+      form.querySelectorAll('input[required]:not([type=radio]), select[required]').forEach(function (input) {
+        var v = String(input.value || '').trim();
+        var bad = !v;
+        if (input === samples) {
+          var n = parseInt(v, 10);
+          bad = isNaN(n) || n < minSamples() || String(n) !== v;
+        }
+        input.setAttribute('aria-invalid', bad ? 'true' : 'false');
+        if (bad) invalid.push(input);
+      });
+      if (invalid.length) {
+        e.preventDefault();
+        invalid.forEach(function (input) {
+          var li = document.createElement('li');
+          var a = document.createElement('a');
+          a.href = '#' + (input.id || '');
+          a.textContent = input.type === 'radio' ? 'Sample type' : labelFor(input) + (input === samples ? ' (minimum ' + minSamples() + ')' : '');
+          li.appendChild(a);
+          errorList.appendChild(li);
+        });
+        errors.hidden = false;
+        invalid[0].focus();
+        return;
+      }
+      errors.hidden = true;
+      root.querySelector('[data-unique-id]').value = Date.now().toString() + Math.random().toString(36).slice(2, 10);
+      submit.disabled = true;
+      submit.setAttribute('aria-busy', 'true');
+      submit.textContent = 'Adding…';
+    });
+
+    window.addEventListener('pageshow', function (ev) {
+      if (ev.persisted) { submit.removeAttribute('aria-busy'); applyVariant(); }
+    });
+  })();
+</script>

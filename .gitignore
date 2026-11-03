@@ -1,0 +1,31 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Dependencies / build output
+node_modules/
+app/dist/
+*.tsbuildinfo
+
+# Local data, renders, caches
+app/.local-db/
+app/.local-storage/
+app/.renders/
+coverage/
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Original Shopify export (kept locally as read-only reference; theme/ is the source of truth)
+theme_export__nxtgenanalysis-com-atelier__16OCT2026-0107pm/
+
+# Editor
+.vscode/
+.idea/
+.claude/settings.local.json
+
+# Theme upload packages (build with the README instructions)
+*.zip

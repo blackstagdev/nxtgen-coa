@@ -1,0 +1,18 @@
+{
+  "sections": {
+    "reports": {
+      "type": "coa-customer-reports",
+      "settings": {
+        "eyebrow": "Your account",
+        "heading": "Test Reports",
+        "verify_page": "verify",
+        "proxy_path": "/apps/coa",
+        "color_scheme": "scheme-1",
+        "accent": "#701379",
+        "padding-block-start": 56,
+        "padding-block-end": 80
+      }
+    }
+  },
+  "order": ["reports"]
+}

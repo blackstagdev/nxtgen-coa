@@ -1,0 +1,38 @@
+{
+  "sections": {
+    "order_tests": {
+      "type": "order-tests",
+      "settings": {
+        "eyebrow": "Laboratory testing",
+        "heading": "Order Tests",
+        "use_collection_title": true,
+        "heading_tag": "h1",
+        "use_collection_description": true,
+        "button_label": "Verify a COA",
+        "button_link": "/pages/verify",
+        "limit": 24,
+        "show_price": true,
+        "show_description": true,
+        "description_words": 28,
+        "show_image": true,
+        "color_scheme": "scheme-1",
+        "accent": "#701379",
+        "padding-block-start": 56,
+        "padding-block-end": 88,
+        "layout": "catalog",
+        "show_steps": true,
+        "steps_heading": "How ordering works",
+        "step_1": "Submit Your Order – Choose your test service online.",
+        "step_2": "Send Your Samples – Ship securely to our certified labs.",
+        "step_3": "Get Results – Access reports through our online verification portal.",
+        "sample_label": "View sample report",
+        "order_label": "Order this test",
+        "variants_label": "Sample types",
+        "footer_text": "Already have a certificate? Check it against our published records."
+      }
+    }
+  },
+  "order": [
+    "order_tests"
+  ]
+}

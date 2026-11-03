@@ -1,0 +1,241 @@
+{
+  "sections": {
+    "main": {
+      "type": "lab-test-product",
+      "settings": {
+        "eyebrow": "Laboratory test",
+        "show_summary": true,
+        "summary_words": 30,
+        "media_caption": "Sample report — for illustration",
+        "assurance_1": "Every certificate carries a unique verification key",
+        "assurance_2": "Results can be checked online on the Verify COA page",
+        "about_heading": "About this test",
+        "options_heading": "Sample types and pricing",
+        "show_steps": true,
+        "steps_heading": "How ordering works",
+        "step_1": "Submit Your Order – Choose your test service online.",
+        "step_2": "Send Your Samples – Ship securely to our certified labs.",
+        "step_3": "Get Results – Access reports through our online verification portal.",
+        "show_receive": true,
+        "receive_heading": "What you receive",
+        "receive_1": "A Certificate of Analysis issued by NxtGen Analysis",
+        "receive_2": "A unique verification key printed on the certificate",
+        "receive_3": "Online verification of the published report",
+        "verify_label": "How verification works",
+        "verify_link": "/pages/verify",
+        "color_scheme": "scheme-1",
+        "accent": "#701379",
+        "padding-block-start": 24,
+        "padding-block-end": 72
+      }
+    },
+    "faq_product": {
+      "type": "faq",
+      "blocks": {
+        "question_1": {
+          "type": "question",
+          "settings": {
+            "question": "What can NxtGen do?",
+            "answer": "<ul><li>Advanced Equipment – State-of-the-art HPLC, mass spectrometry, and stability testing systems. </li><li>Comprehensive Testing – From purity and identity confirmation to stability and custom solutions. </li><li>Fast Turnaround – Reports delivered quickly without compromising accuracy. </li><li>Regulatory Compliance – Results formatted to meet research and industry standards</li></ul>",
+            "open": true
+          }
+        },
+        "question_2": {
+          "type": "question",
+          "settings": {
+            "question": "How does NxtGen’s services work?",
+            "answer": "<ul><li>Submit Your Order – Choose your test service online. </li><li>Send Your Samples – Ship securely to our certified labs. </li><li>Get Results – Access reports through our online verification portal. </li></ul>",
+            "open": false
+          }
+        },
+        "question_3": {
+          "type": "question",
+          "settings": {
+            "question": "Who is this testing for?",
+            "answer": "<ul><li>Research Institutions – Supporting academic and clinical research projects. </li><li>Biotech & Pharma Companies – Helping ensure product quality before market release. </li><li>Manufacturers & Suppliers – Verifying peptide quality for customer confidence. </li><li>Independent Labs – Providing specialized testing on-demand. </li></ul>",
+            "open": false
+          }
+        }
+      },
+      "block_order": [
+        "question_1",
+        "question_2",
+        "question_3"
+      ],
+      "settings": {
+        "eyebrow": "FAQ",
+        "heading": "Frequently asked questions",
+        "color_scheme": "scheme-1",
+        "accent": "#701379",
+        "padding-block-start": 64,
+        "padding-block-end": 64
+      }
+    },
+    "product_recommendations_qnzPkn": {
+      "type": "product-recommendations",
+      "blocks": {
+        "text_GbxcYC": {
+          "type": "text",
+          "name": "t:names.header",
+          "settings": {
+            "text": "<h3>Other Tests Available</h3>",
+            "width": "100%",
+            "max_width": "normal",
+            "alignment": "center",
+            "type_preset": "h4",
+            "font": "var(--font-primary--family)",
+            "font_size": "",
+            "line_height": "normal",
+            "letter_spacing": "normal",
+            "case": "none",
+            "wrap": "pretty",
+            "color": "",
+            "background": false,
+            "background_color": "#00000026",
+            "corner_radius": 0,
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {}
+        },
+        "static-product-card": {
+          "type": "_product-card",
+          "name": "t:names.product_card",
+          "static": true,
+          "settings": {
+            "product_card_gap": 0,
+            "inherit_color_scheme": false,
+            "color_scheme": "scheme-5",
+            "border": "none",
+            "border_width": 37,
+            "border_opacity": 100,
+            "border_radius": 0,
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {
+            "product_card_gallery_YYPH6q": {
+              "type": "_product-card-gallery",
+              "name": "t:names.product_card_media",
+              "settings": {
+                "image_ratio": "adapt",
+                "border": "solid",
+                "border_width": 2,
+                "border_opacity": 100,
+                "border_radius": 0,
+                "padding-block-start": 0,
+                "padding-block-end": 0,
+                "padding-inline-start": 0,
+                "padding-inline-end": 0
+              },
+              "blocks": {}
+            },
+            "group_396y6r": {
+              "type": "_product-card-group",
+              "settings": {
+                "content_direction": "row",
+                "vertical_on_mobile": true,
+                "horizontal_alignment": "center",
+                "vertical_alignment": "center",
+                "align_baseline": false,
+                "horizontal_alignment_flex_direction_column": "flex-start",
+                "vertical_alignment_flex_direction_column": "center",
+                "gap": 0,
+                "width": "fill",
+                "custom_width": 100,
+                "width_mobile": "fill",
+                "custom_width_mobile": 100,
+                "height": "fill",
+                "custom_height": 100,
+                "inherit_color_scheme": true,
+                "color_scheme": "",
+                "background_media": "none",
+                "video_position": "cover",
+                "background_image_position": "cover",
+                "border": "none",
+                "border_width": 1,
+                "border_opacity": 100,
+                "border_radius": 0,
+                "toggle_overlay": false,
+                "overlay_color": "#00000026",
+                "overlay_style": "solid",
+                "gradient_direction": "to top",
+                "link": "",
+                "open_in_new_tab": false,
+                "padding-block-start": 10,
+                "padding-block-end": 10,
+                "padding-inline-start": 0,
+                "padding-inline-end": 0
+              },
+              "blocks": {
+                "text_DbAGwa": {
+                  "type": "text",
+                  "settings": {
+                    "text": "<h4>{{ closest.product.title }}</h4>",
+                    "width": "100%",
+                    "max_width": "normal",
+                    "alignment": "center",
+                    "type_preset": "h5",
+                    "font": "var(--font-primary--family)",
+                    "font_size": "",
+                    "line_height": "normal",
+                    "letter_spacing": "normal",
+                    "case": "none",
+                    "wrap": "pretty",
+                    "color": "var(--color-foreground)",
+                    "background": false,
+                    "background_color": "#00000026",
+                    "corner_radius": 0,
+                    "padding-block-start": 0,
+                    "padding-block-end": 0,
+                    "padding-inline-start": 0,
+                    "padding-inline-end": 0
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "text_DbAGwa"
+              ]
+            }
+          },
+          "block_order": [
+            "product_card_gallery_YYPH6q",
+            "group_396y6r"
+          ]
+        }
+      },
+      "block_order": [
+        "text_GbxcYC"
+      ],
+      "name": "t:names.product_recommendations",
+      "settings": {
+        "product": "{{ closest.product }}",
+        "recommendation_type": "related",
+        "layout_type": "grid",
+        "carousel_on_mobile": false,
+        "max_products": 4,
+        "columns": 4,
+        "mobile_columns": "2",
+        "columns_gap": 16,
+        "rows_gap": 16,
+        "icons_style": "arrow",
+        "icons_shape": "none",
+        "section_width": "page-width",
+        "gap": 28,
+        "color_scheme": "scheme-1",
+        "padding-block-start": 40,
+        "padding-block-end": 48
+      }
+    }
+  },
+  "order": [
+    "main",
+    "faq_product",
+    "product_recommendations_qnzPkn"
+  ]
+}

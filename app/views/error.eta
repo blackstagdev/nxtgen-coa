@@ -1,0 +1,7 @@
+<% layout('./layout') %>
+<div class="panel" data-w="sm">
+  <p class="eyebrow">Error</p>
+  <h1><%= it.title %></h1>
+  <p><%= it.message %></p>
+  <p><a class="btn btn--secondary" href="/admin/reports">Back to reports</a></p>
+</div>

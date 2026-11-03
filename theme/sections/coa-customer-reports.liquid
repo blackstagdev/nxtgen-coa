@@ -1,0 +1,116 @@
+{%- comment -%}
+  Test Reports — a signed-in customer's published COAs, loaded from the NxtGen
+  COA app through the Shopify app proxy (/apps/coa/api/my-reports). Shopify signs
+  the customer id on each request; the app never trusts ids sent by the browser.
+{%- endcomment -%}
+{{ 'nga-coa.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign verify_url = section.settings.verify_page.url | default: '/pages/verify'
+  assign proxy = section.settings.proxy_path | default: '/apps/coa'
+-%}
+
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+<div
+  class="section section--page-width color-{{ section.settings.color_scheme }} nga"
+  style="--nga-accent-color: {{ section.settings.accent }};"
+>
+  <div class="spacing-style" style="{% render 'spacing-style', settings: section.settings %}">
+    {%- if section.settings.eyebrow != blank -%}<p class="nga__eyebrow">{{ section.settings.eyebrow | escape }}</p>{%- endif -%}
+    <h1 class="nga__title">{{ section.settings.heading | default: page.title | escape }}</h1>
+
+    {%- if customer -%}
+      <script src="{{ 'nga-reports.js' | asset_url }}" defer></script>
+      {%- if section.settings.intro != blank -%}<div class="nga__intro rte">{{ section.settings.intro }}</div>{%- endif -%}
+      <nga-reports
+        data-endpoint="{{ proxy | append: '/api/my-reports' }}"
+        data-types-endpoint="{{ proxy | append: '/api/test-types' }}"
+        data-verify-url="{{ verify_url }}"
+      >
+        <form class="nga-reports__toolbar" data-form role="search" aria-label="Filter your reports">
+          <div class="nga-field">
+            <label for="nga-q-{{ section.id }}">Search</label>
+            <input class="nga-input" id="nga-q-{{ section.id }}" name="q" type="search" maxlength="80" placeholder="Sample, lot, report ID or verification key" autocomplete="off" data-q>
+          </div>
+          <div class="nga-field">
+            <label for="nga-type-{{ section.id }}">Test type</label>
+            <select class="nga-select" id="nga-type-{{ section.id }}" name="type" data-type>
+              <option value="">All test types</option>
+            </select>
+          </div>
+          <button class="button" type="submit">Apply</button>
+        </form>
+        <p class="nga-reports__count" data-count aria-live="polite"></p>
+        <div data-results aria-busy="true">
+          <div class="nga-skeleton" style="height:56px;margin-bottom:8px"></div>
+          <div class="nga-skeleton" style="height:56px;margin-bottom:8px"></div>
+          <div class="nga-skeleton" style="height:56px"></div>
+        </div>
+
+        <template data-tpl="empty">
+          <div class="nga-empty">
+            <h2>{{ section.settings.empty_title | escape }}</h2>
+            <p>{{ section.settings.empty_text | escape }}</p>
+            <div class="nga__actions"><a class="button-secondary button" href="{{ verify_url }}">{{ section.settings.verify_label | escape }}</a></div>
+          </div>
+        </template>
+        <template data-tpl="no_match">
+          <div class="nga-empty">
+            <h2>No reports match your search</h2>
+            <p>Try a different search term or clear the test type filter.</p>
+            <div class="nga__actions"><button type="button" class="button-secondary button" data-clear>Clear filters</button></div>
+          </div>
+        </template>
+        <template data-tpl="error">
+          <div class="nga-status nga-status--err" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 8.5l7 7m0-7l-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <div><strong>Your reports could not be loaded</strong><p data-slot="message">Please try again in a moment.</p>
+              <p style="margin-top:10px"><button type="button" class="nga-link-btn" data-retry>Try again</button></p></div>
+          </div>
+        </template>
+      </nga-reports>
+    {%- else -%}
+      <div class="nga-gate" style="margin-top:28px">
+        <div>
+          <h2 class="nga__title" style="font-size:clamp(1.4rem,1.2rem + 1vw,1.9rem)">{{ section.settings.signed_out_title | escape }}</h2>
+          <p class="nga__intro">{{ section.settings.signed_out_text | escape }}</p>
+          <div class="nga__actions">
+            <a class="button" href="{{ routes.account_login_url }}?return_url={{ request.path | url_encode }}">Sign in</a>
+            <a class="button-secondary button" href="{{ verify_url }}">{{ section.settings.verify_label | escape }}</a>
+          </div>
+        </div>
+        <ol class="nga-steps">
+          <li>Sign in with the email address you gave NxtGen Analysis when ordering.</li>
+          <li>Published certificates linked to that email appear here.</li>
+          <li>Anyone with a verification key can also check a certificate on the Verify COA page.</li>
+        </ol>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Test reports",
+  "class": "section-wrapper",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Your account" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Test Reports", "info": "Leave empty to use the page title." },
+    { "type": "richtext", "id": "intro", "label": "Introduction (signed in)", "default": "<p>Published Certificates of Analysis linked to your account email.</p>" },
+    { "type": "text", "id": "signed_out_title", "label": "Signed-out heading", "default": "Sign in to see your reports" },
+    { "type": "text", "id": "signed_out_text", "label": "Signed-out text", "default": "Your published Certificates of Analysis are listed in your account." },
+    { "type": "text", "id": "empty_title", "label": "No reports — heading", "default": "No published reports yet" },
+    { "type": "text", "id": "empty_text", "label": "No reports — text", "default": "Reports appear here once NxtGen Analysis publishes them for the email address on your account. If you expected a report, contact us with your order details." },
+    { "type": "text", "id": "verify_label", "label": "Verify link label", "default": "Verify a COA" },
+    { "type": "page", "id": "verify_page", "label": "Verify COA page" },
+    { "type": "header", "content": "Connection" },
+    { "type": "text", "id": "proxy_path", "label": "App proxy path", "default": "/apps/coa" },
+    { "type": "header", "content": "Style" },
+    { "type": "color_scheme", "id": "color_scheme", "label": "Color scheme", "default": "scheme-1" },
+    { "type": "color", "id": "accent", "label": "Accent color", "default": "#701379" },
+    { "type": "range", "id": "padding-block-start", "label": "Top padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 56 },
+    { "type": "range", "id": "padding-block-end", "label": "Bottom padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80 }
+  ],
+  "presets": [{ "name": "Test reports" }]
+}
+{% endschema %}

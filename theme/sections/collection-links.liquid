@@ -1,0 +1,437 @@
+{% liquid
+  assign collection_list = section.settings.collection_list
+
+  if collection_list == blank
+    assign limit = 4
+
+    for i in (1..4)
+      assign collection_list = collection_list | append: ', '
+    endfor
+
+    assign collection_list = collection_list | split: ','
+  endif
+
+  assign active_collection = collection_list | find: 'id', collection.id | default: collection_list.first
+
+  ##### NEW: target the specific "Order Test" collection and get its products
+  # If your handle isn't exactly 'order-test', change it here:
+  assign target_collection = collections['order-test']
+  if target_collection == nil
+    assign target_collection = active_collection
+  endif
+  assign products = target_collection.products
+%}
+
+<script
+  src="{{ 'collection-links.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+<div
+  class="section section--{{ section.settings.section_width }} color-{{ section.settings.color_scheme }} spacing-style"
+  style="{% render 'spacing-style', settings: section.settings %}"
+  data-testid="collection-links-{{ section.id }}"
+>
+  <collection-links-component
+    layout="{{ section.settings.layout }}"
+    alignment="{{ section.settings.alignment }}"
+    {% if section.settings.image_position == 'left' %}
+      reverse
+    {% endif %}
+  >
+    <div
+      class="collection-links__container"
+      ref="container"
+    >
+      {%- comment -%}
+        UPDATED:
+        Instead of looping collections and rendering _collection-link blocks,
+        we list all PRODUCTS from the "Order Test" collection.
+      {%- endcomment -%}
+<span class="product-title"
+  style="display:block;
+   margin-top: 40px !important; 
+         font-size: clamp(32px, 3vw, 48px);
+         font-weight: 700;
+         color: #701379 !important;
+         line-height: 1.2;
+         margin-bottom: 20px;">
+
+  Order your Test
+</span>
+
+
+      {% if products.size == 0 %}
+        <p>No products found in {{ target_collection.title }}.</p>
+      {% else %}
+        {% for product in products %}
+          {% assign feat = product.featured_image %}
+          <a
+            class="product-link"
+            href="{{ product.url }}"
+            data-image="{{ feat | image_url: width: 400 }}"
+            data-alt="{{ product.title | escape }}"
+            aria-label="{{ product.title | escape }}"
+          >
+            <span class="product-title">{{ product.title }}</span>
+          </a>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    {% case section.settings.layout %}
+      {% when 'spotlight' %}
+        {%- comment -%}
+          UPDATED:
+          Keep your slideshow container, but we render a SINGLE slide with an <img>.
+          We then swap this image’s src on hover using JS below.
+        {%- endcomment -%}
+        {% capture slides %}
+          {% capture slide %}
+            {% if products.first and products.first.featured_image %}
+              <img
+                class="products-spotlight__img"
+                src="{{ products.first.featured_image | image_url: width: 400 }}"
+                alt="{{ products.first.title | escape }}"
+                loading="lazy"
+                decoding="async"
+              >
+            {% else %}
+              <div class="products-spotlight__placeholder" style="aspect-ratio:4/5;background:rgba(0,0,0,.06);border-radius:12px;"></div>
+            {% endif %}
+          {% endcapture %}
+          {% render 'slideshow-slide', children: slide, index: 0 %}
+        {% endcapture %}
+
+        {% render 'slideshow',
+          slides: slides,
+          slide_count: 1,
+          class: 'collection-links__images',
+          ref: 'slideshow'
+        %}
+    {% endcase %}
+  </collection-links-component>
+</div>
+
+{%- comment -%}
+  NEW JS:
+  - Finds the preview <img> inside the slideshow area
+  - Swaps its src/alt to the hovered product's image
+{%- endcomment -%}
+<script>
+  (function() {
+    const root = document.querySelector('[data-testid="collection-links-{{ section.id }}"]');
+    if (!root) return;
+
+    // The preview image we rendered inside the single-slide slideshow
+    const preview = root.querySelector('.collection-links__images img.products-spotlight__img');
+    // Fallback: if not found, try any img inside images area
+    const previewFallback = root.querySelector('.collection-links__images img');
+    const previewImg = preview || previewFallback;
+
+    const productLinks = root.querySelectorAll('.product-link');
+    if (!previewImg || !productLinks.length) return;
+
+    const swap = (el) => {
+      const src = el.getAttribute('data-image');
+      const alt = el.getAttribute('data-alt') || '';
+      if (!src) return;
+
+      const img = new Image();
+      img.onload = () => {
+        previewImg.src = src;
+        previewImg.alt = alt;
+      };
+      img.src = src;
+    };
+
+    productLinks.forEach((link) => {
+      link.addEventListener('mouseenter', () => swap(link));
+      link.addEventListener('focus', () => swap(link));
+    });
+
+    // Optional reset when leaving the list
+    const container = root.querySelector('.collection-links__container');
+    container && container.addEventListener('mouseleave', () => {
+      const first = productLinks[0];
+      if (first) swap(first);
+    });
+  })();
+</script>
+
+{% # theme-check-disable ValidBlockTarget %}
+{% stylesheet %}
+  collection-links-component {
+    --alignment: flex-start;
+    --template-column-ratio: 1fr; /* ✅ default so image column won't shrink */
+
+    display: grid;
+  align-items: flex-start !important;  /* ← aligns product titles to the top/left */
+  justify-content: flex-start !important;
+    grid-gap: var(--gap-3xl);
+
+    &:has([ratio='portrait']) {
+      --template-column-ratio: 0.8fr;
+    }
+
+    &:has([ratio='square']) {
+      --template-column-ratio: 1fr;
+    }
+
+    &:has([ratio='landscape']) {
+      --template-column-ratio: 1.4fr;
+    }
+
+    &[alignment='center'] {
+      --alignment: center;
+
+      .text-block {
+        text-align: center;
+      }
+    }
+
+    &[alignment='right'] {
+      --alignment: flex-end;
+
+      .text-block {
+        text-align: right;
+      }
+    }
+
+    &[layout='spotlight'] {
+      position: relative;
+      grid-template-columns: 1fr var(--template-column-ratio);
+      grid-template-areas: 'text image';
+
+      @media (min-width: 749px) {
+        &[reverse] {
+          grid-template-areas: 'image text';
+          grid-template-columns: var(--template-column-ratio) 1fr;
+        }
+      }
+
+      .collection-links__container {
+        align-items: var(--alignment);
+      }
+
+      @media (max-width: 749px) {
+        grid-template-columns: 1fr;
+        grid-template-areas: 'text' 'image';
+        grid-gap: var(--gap-2xl);
+
+        .collection-links__container {
+          gap: clamp(var(--gap-xs), 1vw, var(--gap-xl)) var(--gap-2xl);
+          justify-content: var(--alignment);
+        }
+         span.product-title[style] {
+    font-size: 42px !important;   /* ← choose any size you want */
+    line-height: 1.2 !important;
+  }
+      }
+      
+    }
+    
+
+    &[layout='text'] {
+      grid-gap: 0;
+      grid-template-areas: 'text';
+
+      .collection-links__container {
+        gap: clamp(var(--gap-xs), 1vw, var(--gap-xl)) var(--gap-2xl);
+        flex-wrap: wrap;
+        flex-direction: row;
+        justify-content: var(--alignment);
+      }
+    }
+  }
+
+  .collection-links__container {
+    display: flex;
+    gap: var(--gap-md);
+    flex-direction: column;
+  }
+
+.product-title {
+  font-family: var(--font-h2--family, var(--font-heading--family, serif));
+  font-style: var(--font-h2--style, normal);
+  font-weight: var(--font-h2--weight, 200);
+  line-height: var(--font-h2--line-height, 1.1);
+  font-size: x-large;
+  letter-spacing: var(--font-h2--letter-spacing, 0em);
+  text-transform: var(--font-h2--case, none);
+  color: #666666;
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+/* ✅ Make product titles smaller on mobile */
+@media (max-width: 749px) {
+  .product-title {
+    font-size: 23px !important;
+    
+  }
+}
+
+  .collection-links__images {
+    overflow: hidden;
+    grid-area: image;
+
+    @media (max-width: 749px) {
+      image-block {
+        max-width: 100%;
+      }
+    }
+  }
+
+.product-link {
+  display: inline-block;
+  text-decoration: none;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.product-link:hover {
+  transform: scale(1.1) translateY(-1px);
+}
+
+/* ✅ Disable hover transform on mobile */
+@media (max-width: 749px) {
+  .product-link:hover {
+    transform: none !important;
+  }
+  .product-link {
+  margin-bottom: 20px; /* adjust to your liking */
+
+}
+.product-title {
+  margin-bottom: 200px; /* adjust to your liking */
+
+}
+}
+
+.product-link:hover .product-title {
+  color: #701379 !important;
+}
+
+
+/* Make spotlight image smaller inside the slideshow */
+.collection-links__images .products-spotlight__img {
+  width: 450px;        /* tweak this number as you like */
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;      /* centers it inside the slide */
+}
+
+
+{% endstylesheet %}
+
+
+
+{% schema %}
+{
+  "name": "t:names.collection_links",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "collection_list",
+      "id": "collection_list",
+      "label": "t:settings.collection_list"
+    },
+    {
+      "type": "header",
+      "content": "t:content.layout"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:settings.layout",
+      "options": [
+        { "value": "spotlight", "label": "t:options.spotlight" },
+        { "value": "text", "label": "t:options.text" }
+      ],
+      "default": "spotlight"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "t:settings.width",
+      "options": [
+        { "value": "page-width", "label": "t:options.page" },
+        { "value": "full-width", "label": "t:options.full" }
+      ],
+      "default": "page-width"
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "t:settings.alignment",
+      "options": [
+        { "value": "left", "label": "t:options.left" },
+        { "value": "center", "label": "t:options.center" },
+        { "value": "right", "label": "t:options.right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "t:settings.image_position",
+      "options": [
+        { "value": "left", "label": "t:options.left" },
+        { "value": "right", "label": "t:options.right" }
+      ],
+      "default": "right",
+      "visible_if": "{{ section.settings.layout == \"spotlight\" }}"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:content.padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "t:settings.top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "t:settings.bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 40
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:names.collection_links_spotlight",
+      "category": "t:categories.collections"
+    },
+    {
+      "name": "t:names.collection_links_text",
+      "category": "t:categories.collections",
+      "settings": {
+        "layout": "text",
+        "alignment": "center"
+      }
+    }
+  ]
+}
+{% endschema %}
+

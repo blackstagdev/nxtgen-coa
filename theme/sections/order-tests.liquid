@@ -1,0 +1,285 @@
+{%- comment -%}
+  Order Tests — lists the products of a collection.
+  - "list" layout: compact numbered list (homepage).
+  - "catalog" layout: one editorial row per test with price, sample types, an order
+    button and a framed preview of the product's sample report (featured image).
+    Used by templates/collection.order-test.json.
+  Each test links to its product page, where snippets/order-test-form.liquid adds it to the cart.
+{%- endcomment -%}
+{{ 'nga-coa.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign source = section.settings.collection
+  if source == blank and collection
+    assign source = collection
+  endif
+  if source == blank
+    assign source = collections['order-test']
+  endif
+
+  assign heading = section.settings.heading
+  if section.settings.use_collection_title and source != blank
+    assign heading = source.title
+  endif
+
+  assign limit = section.settings.limit
+  assign layout = section.settings.layout | default: 'list'
+  assign title_id = 'order-tests-title-' | append: section.id
+-%}
+
+{%- capture heading_html -%}
+  {%- if section.settings.eyebrow != blank -%}
+    <p class="nga__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+  {%- endif -%}
+  {%- if heading != blank -%}
+    {%- if section.settings.heading_tag == 'h1' -%}
+      <h1 class="nga__title nga__title--accent" id="{{ title_id }}">{{ heading | escape }}</h1>
+    {%- else -%}
+      <h2 class="nga__title nga__title--accent" id="{{ title_id }}">{{ heading | escape }}</h2>
+    {%- endif -%}
+  {%- endif -%}
+  {%- if section.settings.use_collection_description and source.description != blank -%}
+    <div class="nga__intro rte">{{ source.description }}</div>
+  {%- elsif section.settings.intro != blank -%}
+    <div class="nga__intro rte">{{ section.settings.intro }}</div>
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- capture empty_html -%}
+  <p class="nga-order__empty">
+    {%- if request.design_mode -%}
+      Choose a collection with products in the section settings.
+    {%- else -%}
+      Tests are not available to order online right now. Please contact us.
+    {%- endif -%}
+  </p>
+{%- endcapture -%}
+
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+<div
+  class="section section--page-width color-{{ section.settings.color_scheme }} nga"
+  style="--nga-accent-color: {{ section.settings.accent }};"
+  data-testid="order-tests-{{ section.id }}"
+>
+  <div class="spacing-style" style="{% render 'spacing-style', settings: section.settings %}">
+    {%- if layout == 'catalog' -%}
+      {%- comment -%} ---------- Catalog (Order Tests page) ---------- {%- endcomment -%}
+      <header class="nga-catalog-head">
+        <div>{{ heading_html }}</div>
+        {%- if section.settings.show_steps -%}
+          <div class="nga-catalog-steps">
+            {%- if section.settings.steps_heading != blank -%}
+              <h2 class="nga-catalog-steps__title">{{ section.settings.steps_heading | escape }}</h2>
+            {%- endif -%}
+            <ol class="nga-steps">
+              {%- if section.settings.step_1 != blank -%}<li>{{ section.settings.step_1 | escape }}</li>{%- endif -%}
+              {%- if section.settings.step_2 != blank -%}<li>{{ section.settings.step_2 | escape }}</li>{%- endif -%}
+              {%- if section.settings.step_3 != blank -%}<li>{{ section.settings.step_3 | escape }}</li>{%- endif -%}
+            </ol>
+          </div>
+        {%- endif -%}
+      </header>
+
+      {%- if source == blank or source.products_count == 0 -%}
+        {{ empty_html }}
+      {%- else -%}
+        <p class="nga-catalog-count">{{ source.products_count }} {% if source.products_count == 1 %}test{% else %}tests{% endif %} available</p>
+        <ol class="nga-catalog" aria-labelledby="{{ title_id }}">
+          {%- for product in source.products limit: limit -%}
+            {%- liquid
+              assign desc = blank
+              if section.settings.show_description
+                assign desc = product.description | replace: '</li>', ' </li>' | replace: '</p>', ' </p>' | replace: '<br>', ' ' | strip_html | strip_newlines | strip | truncatewords: section.settings.description_words
+              endif
+              assign types = ''
+              unless product.has_only_default_variant
+                for v in product.variants
+                  if forloop.first
+                    assign types = v.title
+                  else
+                    assign types = types | append: ' · ' | append: v.title
+                  endif
+                endfor
+              endunless
+              assign name_id = 'test-' | append: section.id | append: '-' | append: forloop.index
+            -%}
+            <li class="nga-test" aria-labelledby="{{ name_id }}">
+              <div class="nga-test__body">
+                <p class="nga-test__num">Test {{ forloop.index | prepend: '0' | slice: -2, 2 }}</p>
+                <h2 class="nga-test__name" id="{{ name_id }}"><a href="{{ product.url }}">{{ product.title | escape }}</a></h2>
+                {%- if desc != blank -%}
+                  <p class="nga-test__desc">{{ desc }}</p>
+                {%- endif -%}
+                <dl class="nga-test__facts">
+                  {%- if section.settings.show_price -%}
+                    <div>
+                      <dt>Price</dt>
+                      <dd>
+                        {%- if product.available -%}
+                          {%- if product.price_varies -%}From {{ product.price_min | money }}{%- else -%}{{ product.price | money }}{%- endif -%}
+                        {%- else -%}
+                          Currently unavailable
+                        {%- endif -%}
+                      </dd>
+                    </div>
+                  {%- endif -%}
+                  {%- if types != blank -%}
+                    <div>
+                      <dt>{{ section.settings.variants_label | default: 'Sample types' | escape }}</dt>
+                      <dd>{{ types | escape }}</dd>
+                    </div>
+                  {%- endif -%}
+                </dl>
+                <div class="nga-test__actions">
+                  {%- if product.available -%}
+                    <a class="button" href="{{ product.url }}">{{ section.settings.order_label | default: 'Order this test' | escape }}<span class="visually-hidden">: {{ product.title | escape }}</span></a>
+                  {%- else -%}
+                    <a class="button-secondary button" href="{{ product.url }}">View details<span class="visually-hidden">: {{ product.title | escape }}</span></a>
+                  {%- endif -%}
+                  {%- if section.settings.show_image and product.featured_image -%}
+                    <a class="nga-test__sample-link" href="{{ product.featured_image | image_url: width: 1600 }}" target="_blank" rel="noopener">
+                      {{- section.settings.sample_label | default: 'View sample report' | escape -}}
+                      <span class="visually-hidden"> for {{ product.title | escape }} (opens in a new tab)</span>
+                    </a>
+                  {%- endif -%}
+                </div>
+              </div>
+              {%- if section.settings.show_image and product.featured_image -%}
+                <a class="nga-test__doc" href="{{ product.featured_image | image_url: width: 1600 }}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+                  {{ product.featured_image | image_url: width: 520 | image_tag: loading: 'lazy', alt: '', width: 260, height: 368, sizes: '(min-width: 990px) 220px, 104px' }}
+                </a>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ol>
+      {%- endif -%}
+
+      {%- if section.settings.button_label != blank and section.settings.button_link != blank -%}
+        <div class="nga-catalog-foot">
+          <p>{{ section.settings.footer_text | escape }}</p>
+          <a class="button-secondary button" href="{{ section.settings.button_link }}">{{ section.settings.button_label | escape }}</a>
+        </div>
+      {%- endif -%}
+    {%- else -%}
+      {%- comment -%} ---------- Compact list (homepage) ---------- {%- endcomment -%}
+      <div class="nga-order">
+        <div class="nga-order__lead">
+          {{ heading_html }}
+          {%- if section.settings.button_label != blank and section.settings.button_link != blank -%}
+            <div class="nga__actions">
+              <a class="button" href="{{ section.settings.button_link }}">{{ section.settings.button_label | escape }}</a>
+            </div>
+          {%- endif -%}
+        </div>
+        <div>
+          {%- if source == blank or source.products_count == 0 -%}
+            {{ empty_html }}
+          {%- else -%}
+            <ol class="nga-order__list" aria-labelledby="{{ title_id }}">
+              {%- for product in source.products limit: limit -%}
+                {%- liquid
+                  assign desc = blank
+                  if section.settings.show_description
+                    assign desc = product.description | replace: '</li>', ' </li>' | replace: '</p>', ' </p>' | replace: '<br>', ' ' | strip_html | strip_newlines | strip | truncatewords: section.settings.description_words
+                  endif
+                -%}
+                <li class="nga-order__item">
+                  <a class="nga-order__link" href="{{ product.url }}">
+                    <span class="nga-order__name">{{ product.title | escape }}</span>
+                    {%- if desc != blank -%}
+                      <p class="nga-order__desc">{{ desc }}</p>
+                    {%- endif -%}
+                    <span class="nga-order__meta">
+                      {%- if section.settings.show_price -%}
+                        {%- if product.available -%}
+                          <span class="nga-order__price">
+                            {%- if product.price_varies -%}
+                              <small>From</small>{{ product.price_min | money }}
+                            {%- else -%}
+                              {{ product.price | money }}
+                            {%- endif -%}
+                          </span>
+                        {%- else -%}
+                          <span class="nga-order__unavailable">Currently unavailable</span>
+                        {%- endif -%}
+                      {%- endif -%}
+                      <span class="nga-order__go" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </span>
+                      <span class="visually-hidden">Order {{ product.title | escape }}</span>
+                    </span>
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ol>
+          {%- endif -%}
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Order tests",
+  "class": "section-wrapper",
+  "settings": [
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Layout",
+      "options": [
+        { "value": "list", "label": "Compact list (homepage)" },
+        { "value": "catalog", "label": "Catalog with sample reports (Order Tests page)" }
+      ],
+      "default": "list"
+    },
+    { "type": "header", "content": "Content" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Laboratory testing" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Order your Test" },
+    { "type": "checkbox", "id": "use_collection_title", "label": "Use the collection title as heading", "default": false },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading level",
+      "options": [
+        { "value": "h2", "label": "H2 (homepage)" },
+        { "value": "h1", "label": "H1 (page title)" }
+      ],
+      "default": "h2"
+    },
+    { "type": "richtext", "id": "intro", "label": "Introduction" },
+    { "type": "checkbox", "id": "use_collection_description", "label": "Use the collection description as introduction", "default": false },
+    { "type": "text", "id": "button_label", "label": "Button label" },
+    { "type": "url", "id": "button_link", "label": "Button link" },
+    { "type": "text", "id": "footer_text", "label": "Text next to the button (catalog)" },
+    { "type": "header", "content": "How ordering works (catalog)" },
+    { "type": "checkbox", "id": "show_steps", "label": "Show steps", "default": true },
+    { "type": "text", "id": "steps_heading", "label": "Steps heading", "default": "How ordering works" },
+    { "type": "text", "id": "step_1", "label": "Step 1" },
+    { "type": "text", "id": "step_2", "label": "Step 2" },
+    { "type": "text", "id": "step_3", "label": "Step 3" },
+    { "type": "header", "content": "Tests" },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection",
+      "info": "Leave empty on a collection template to list that collection. Falls back to the \"order-test\" collection."
+    },
+    { "type": "range", "id": "limit", "label": "Maximum tests", "min": 2, "max": 24, "step": 1, "default": 12 },
+    { "type": "checkbox", "id": "show_price", "label": "Show price", "default": true },
+    { "type": "checkbox", "id": "show_description", "label": "Show short product description", "default": true },
+    { "type": "range", "id": "description_words", "label": "Description length (words)", "min": 8, "max": 40, "step": 1, "default": 18 },
+    { "type": "checkbox", "id": "show_image", "label": "Show sample report (product image)", "info": "Catalog layout only.", "default": true },
+    { "type": "text", "id": "sample_label", "label": "Sample report link label", "default": "View sample report" },
+    { "type": "text", "id": "order_label", "label": "Order button label", "default": "Order this test" },
+    { "type": "text", "id": "variants_label", "label": "Variants label", "default": "Sample types" },
+    { "type": "header", "content": "Style" },
+    { "type": "color_scheme", "id": "color_scheme", "label": "Color scheme", "default": "scheme-1" },
+    { "type": "color", "id": "accent", "label": "Accent color", "default": "#701379" },
+    { "type": "range", "id": "padding-block-start", "label": "Top padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80 },
+    { "type": "range", "id": "padding-block-end", "label": "Bottom padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80 }
+  ],
+  "presets": [{ "name": "Order tests" }]
+}
+{% endschema %}

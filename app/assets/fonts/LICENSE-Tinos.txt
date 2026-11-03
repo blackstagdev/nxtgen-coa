@@ -1,0 +1,4 @@
+Tinos is licensed under the SIL Open Font License 1.1.
+Copyright 2026 The Tinos Project Authors (https://github.com/googlefonts/tinos)
+Full text: https://openfontlicense.org/open-font-license-official-text/
+Source: https://github.com/google/fonts/tree/main/ofl/tinos

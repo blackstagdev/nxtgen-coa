@@ -1,0 +1,68 @@
+<% layout('./layout') %>
+<% const statusLabel = { draft: 'Draft', published: 'Published', unpublished: 'Unpublished', archived: 'Archived' } %>
+<% const filtered = !!(it.filters.q || it.filters.status || it.filters.type) %>
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Certificates of Analysis</p>
+    <h1>Reports</h1>
+    <p><%= it.result.total %> report<%= it.result.total === 1 ? '' : 's' %><%= it.filters.status ? ' · ' + (statusLabel[it.filters.status] || '') : ' (archived hidden)' %></p>
+  </div>
+  <a class="btn btn--brand" href="/admin/reports/new">New report</a>
+</div>
+<form class="filters" method="get" action="/admin/reports" role="search">
+  <div class="field">
+    <label for="q">Search</label>
+    <input id="q" name="q" type="search" value="<%= it.filters.q %>" placeholder="Verification key, sample, lot, client, report ID">
+  </div>
+  <div class="field">
+    <label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="">All except archived</option>
+      <% for (const s of ['draft', 'published', 'unpublished', 'archived']) { %><option value="<%= s %>" <%~ it.filters.status === s ? 'selected' : '' %>><%= statusLabel[s] %></option><% } %>
+    </select>
+  </div>
+  <div class="field">
+    <label for="type">Test type</label>
+    <select id="type" name="type">
+      <option value="">All test types</option>
+      <% for (const d of it.definitions) { %><option value="<%= d.slug %>" <%~ it.filters.type === d.slug ? 'selected' : '' %>><%= d.name %></option><% } %>
+    </select>
+  </div>
+  <div class="form-actions"><button class="btn btn--primary" type="submit">Filter</button><% if (filtered) { %><a class="btn btn--secondary" href="/admin/reports">Clear</a><% } %></div>
+</form>
+<% if (!it.result.rows.length) { %>
+<div class="panel empty">
+  <h2><%= filtered ? 'No reports match these filters' : 'No reports yet' %></h2>
+  <p><%= filtered ? 'Try a different search or clear the filters.' : 'Create the first COA draft to get started.' %></p>
+  <a class="btn btn--brand" href="/admin/reports/new">New report</a>
+</div>
+<% } else { %>
+<div class="table-wrap">
+<table class="data stack">
+  <caption class="visually-hidden">Reports, most recently updated first</caption>
+  <thead><tr><th scope="col">Sample / lot</th><th scope="col">Test type</th><th scope="col">Verification key</th><th scope="col">Status</th><th scope="col">Last updated</th></tr></thead>
+  <tbody>
+  <% for (const r of it.result.rows) { %>
+    <tr>
+      <td data-label="Sample"><div><a class="row-link" href="/admin/reports/<%= r.id %>"><%= r.summary.sample || 'Untitled draft' %></a>
+        <span class="sub"><%= r.summary.lot ? 'Lot ' + r.summary.lot : '' %><%= r.summary.client ? ' · ' + r.summary.client : '' %></span></div></td>
+      <td data-label="Test type"><div><%= r.def ? r.def.name : r.test_type %><% if (r.report_number) { %><span class="sub mono"><%= r.report_number %></span><% } %></div></td>
+      <td data-label="Key" class="mono"><div><%= r.verification_key %></div></td>
+      <td data-label="Status"><div><span class="badge badge--<%= r.status %>"><%= statusLabel[r.status] %></span><% if (r.is_test_fixture) { %> <span class="badge badge--test">Test data</span><% } %></div></td>
+      <td data-label="Updated"><div><time datetime="<%= new Date(r.updated_at).toISOString() %>"><%= new Date(r.updated_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) %></time><span class="sub">by <%= r.updated_by_name || '—' %></span></div></td>
+    </tr>
+  <% } %>
+  </tbody>
+</table>
+</div>
+<% if (it.result.pages > 1) { %>
+<% const qs = (p) => '?' + new URLSearchParams({ ...it.filters, page: String(p) }).toString() %>
+<div class="pagination">
+  <span>Page <%= it.result.page %> of <%= it.result.pages %></span>
+  <nav aria-label="Pagination">
+    <% if (it.result.page > 1) { %><a class="btn btn--secondary btn--sm" href="<%= qs(it.result.page - 1) %>">Previous</a><% } %>
+    <% if (it.result.page < it.result.pages) { %><a class="btn btn--secondary btn--sm" href="<%= qs(it.result.page + 1) %>">Next</a><% } %>
+  </nav>
+</div>
+<% } %>
+<% } %>

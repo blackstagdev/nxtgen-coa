@@ -1,0 +1,53 @@
+{
+  "name": "nga-coa-app",
+  "version": "1.0.0",
+  "description": "NxtGen Analysis COA platform: staff dashboard, COA rendering, R2 storage, Shopify app proxy",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
+    "migrate": "node dist/db/migrate.js",
+    "migrate:dev": "tsx --env-file-if-exists=.env src/db/migrate.ts",
+    "create-admin": "node dist/scripts/create-admin.js",
+    "create-admin:dev": "tsx --env-file-if-exists=.env src/scripts/create-admin.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "render:fixtures": "tsx scripts/render-fixtures.ts",
+    "db:local": "tsx scripts/local-db.ts",
+    "e2e:dashboard": "tsx scripts/e2e-dashboard.ts",
+    "theme:harness": "tsx scripts/theme-harness.ts"
+  },
+  "author": "NxtGen Analysis",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1161.0",
+    "@fastify/cookie": "^11.1.5",
+    "@fastify/formbody": "^9.0.1",
+    "@fastify/multipart": "^10.1.7",
+    "@fastify/rate-limit": "^11.2.2",
+    "@fastify/static": "^10.1.8",
+    "@napi-rs/canvas": "^1.1.0",
+    "@node-rs/argon2": "^2.2.2",
+    "eta": "^4.6.0",
+    "fastify": "^5.12.8",
+    "pg": "^8.23.1",
+    "sharp": "^0.35.5",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.14",
+    "@electric-sql/pglite-socket": "^0.2.17",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "liquidjs": "^10.30.1",
+    "playwright": "^1.64.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,81 @@
+# Render Blueprint — NxtGen Analysis COA platform
+# Docs: https://render.com/docs/blueprint-spec
+# Creates one web service (dashboard + Shopify app-proxy API) and one managed Postgres.
+# Images are stored in Cloudflare R2 (never on Render's ephemeral disk).
+services:
+  - type: web
+    name: nga-coa
+    runtime: node
+    rootDir: app
+    plan: starter
+    region: virginia
+    buildCommand: npm ci --include=dev && npm run build && npm prune --omit=dev
+    startCommand: npm run migrate && npm start
+    healthCheckPath: /healthz
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nga-coa-db
+          property: connectionString
+      - key: DATABASE_POOL_MAX
+        value: "10"
+      - key: TRUST_PROXY
+        value: "true"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TOKEN_ENC_KEY
+        generateValue: true
+      - key: SESSION_TTL_HOURS
+        value: "12"
+      # Public URL of this service (custom domain if you add one), e.g. https://coa.nxtgenanalysis.com
+      - key: APP_URL
+        sync: false
+      # Cloudflare R2
+      - key: STORAGE_DRIVER
+        value: r2
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_PRIVATE_BUCKET
+        value: nga-coa-private
+      - key: R2_PUBLIC_BUCKET
+        value: nga-coa-public
+      # OPTIONAL. Leave unset: the app serves published images at <APP_URL>/coa-assets.
+      # Only set it if a custom domain is later connected to the PUBLIC bucket (requires the domain on Cloudflare).
+      # - key: PUBLIC_ASSET_BASE_URL
+      #   value: https://coa-cdn.example.com
+      # Shopify app (Dev Dashboard) — app proxy + read_customers
+      - key: SHOPIFY_SHOP
+        sync: false
+      - key: SHOPIFY_API_KEY
+        sync: false
+      - key: SHOPIFY_API_SECRET
+        sync: false
+      - key: SHOPIFY_SCOPES
+        value: read_customers
+      - key: SHOPIFY_API_VERSION
+        value: "2026-07"
+      # One-time first administrator (remove the password after the first deploy)
+      - key: ADMIN_BOOTSTRAP_EMAIL
+        sync: false
+      - key: ADMIN_BOOTSTRAP_NAME
+        sync: false
+      - key: ADMIN_BOOTSTRAP_PASSWORD
+        sync: false
+
+databases:
+  - name: nga-coa-db
+    plan: basic-256mb
+    region: virginia
+    databaseName: nga_coa
+    user: nga_coa
+    postgresMajorVersion: "16"
+    ipAllowList: []

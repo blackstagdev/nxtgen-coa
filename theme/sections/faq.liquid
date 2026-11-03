@@ -1,0 +1,91 @@
+{%- comment -%}
+  FAQ — question/answer blocks rendered as native <details> disclosures
+  (keyboard and screen-reader accessible without JavaScript).
+{%- endcomment -%}
+{{ 'nga-coa.css' | asset_url | stylesheet_tag }}
+
+{%- assign has_bg = false -%}
+{%- if section.settings.background_image != blank -%}{%- assign has_bg = true -%}{%- endif -%}
+
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+<div
+  class="section section--page-width color-{{ section.settings.color_scheme }} nga nga-faq{% if has_bg %} nga-faq--on-image{% endif %}"
+  style="--nga-accent-color: {{ section.settings.accent }};"
+>
+  {%- if has_bg -%}
+    <div class="nga-faq__bg" aria-hidden="true">
+      {{ section.settings.background_image | image_url: width: 2400 | image_tag: loading: 'lazy', alt: '', sizes: '100vw' }}
+    </div>
+  {%- endif -%}
+  <div class="spacing-style" style="{% render 'spacing-style', settings: section.settings %}">
+    <div class="nga-faq__grid">
+      <div class="nga-faq__lead">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="nga__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+        <h2 class="nga__title" id="faq-title-{{ section.id }}">{{ section.settings.heading | escape }}</h2>
+        {%- if section.settings.intro != blank -%}
+          <div class="nga__intro rte">{{ section.settings.intro }}</div>
+        {%- endif -%}
+        {%- if section.settings.cta_text != blank -%}
+          <div class="nga-faq__cta">
+            <p>{{ section.settings.cta_text | escape }}</p>
+            {%- if section.settings.cta_label != blank and section.settings.cta_link != blank -%}
+              <div class="nga__actions" style="margin-top:12px">
+                <a class="button-secondary button" href="{{ section.settings.cta_link }}">{{ section.settings.cta_label | escape }}</a>
+              </div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      <div class="nga-faq__panel" role="list" aria-labelledby="faq-title-{{ section.id }}">
+        {%- for block in section.blocks -%}
+          <details class="nga-faq__item" role="listitem" {{ block.shopify_attributes }} {% if block.settings.open %}open{% endif %}>
+            <summary class="nga-faq__q">
+              <span>{{ block.settings.question | escape }}</span>
+              <span class="nga-faq__icon" aria-hidden="true"></span>
+            </summary>
+            <div class="nga-faq__a rte">{{ block.settings.answer }}</div>
+          </details>
+        {%- else -%}
+          {%- if request.design_mode -%}<p class="nga-hint" style="padding:20px 0">Add questions in the section settings.</p>{%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "FAQ",
+  "class": "section-wrapper",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "FAQ" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Frequently asked questions" },
+    { "type": "richtext", "id": "intro", "label": "Introduction" },
+    { "type": "header", "content": "Contact prompt" },
+    { "type": "text", "id": "cta_text", "label": "Text" },
+    { "type": "text", "id": "cta_label", "label": "Button label" },
+    { "type": "url", "id": "cta_link", "label": "Button link" },
+    { "type": "header", "content": "Style" },
+    { "type": "color_scheme", "id": "color_scheme", "label": "Color scheme", "default": "scheme-1" },
+    { "type": "image_picker", "id": "background_image", "label": "Background image", "info": "Questions stay on a solid panel so they remain readable." },
+    { "type": "color", "id": "accent", "label": "Accent color", "default": "#701379" },
+    { "type": "range", "id": "padding-block-start", "label": "Top padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 88 },
+    { "type": "range", "id": "padding-block-end", "label": "Bottom padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 88 }
+  ],
+  "blocks": [
+    {
+      "type": "question",
+      "name": "Question",
+      "settings": [
+        { "type": "text", "id": "question", "label": "Question", "default": "Question" },
+        { "type": "richtext", "id": "answer", "label": "Answer", "default": "<p>Answer</p>" },
+        { "type": "checkbox", "id": "open", "label": "Open by default", "default": false }
+      ]
+    }
+  ],
+  "presets": [{ "name": "FAQ", "blocks": [{ "type": "question" }, { "type": "question" }] }]
+}
+{% endschema %}

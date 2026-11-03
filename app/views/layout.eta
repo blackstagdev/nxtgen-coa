@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title><%= it.title || 'COA Console' %> · NxtGen Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700&family=Red+Hat+Text:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/admin/assets/admin.css">
+  <script src="/admin/assets/admin.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<% if (it.user) { %>
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="/admin/reports"><span class="brand__mark">nxt<span>gen</span></span><span class="brand__sub">COA Console</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="/admin/reports" <%~ it.path.startsWith('/admin/reports') && !it.path.startsWith('/admin/reports/new') ? 'aria-current="page"' : '' %>>Reports</a>
+      <a href="/admin/reports/new" <%~ it.path.startsWith('/admin/reports/new') ? 'aria-current="page"' : '' %>>New report</a>
+      <% if (it.user.role === 'admin') { %>
+      <a href="/admin/users" <%~ it.path.startsWith('/admin/users') ? 'aria-current="page"' : '' %>>Users</a>
+      <a href="/admin/settings" <%~ it.path.startsWith('/admin/settings') ? 'aria-current="page"' : '' %>>Integrations</a>
+      <% } %>
+    </nav>
+    <div class="topbar__user">
+      <a href="/admin/account" class="linkbtn"><%= it.user.name %></a>
+      <form method="post" action="/admin/logout"><input type="hidden" name="_csrf" value="<%= it.csrf %>"><button class="linkbtn" type="submit">Sign out</button></form>
+    </div>
+  </div>
+</header>
+<% } %>
+<main id="main" class="page" tabindex="-1">
+  <% if (it.env !== 'production') { %>
+  <div class="alert alert--warn" role="note"><p><strong>Non-production environment (<%= it.env %>).</strong> Data here is for development and testing only.</p></div>
+  <% } %>
+  <% if (it.flash) { %>
+  <div class="alert alert--<%= it.flash.type === 'error' ? 'error' : it.flash.type === 'success' ? 'success' : 'info' %>" role="<%= it.flash.type === 'error' ? 'alert' : 'status' %>"><p><%= it.flash.message %></p></div>
+  <% } %>
+  <%~ it.body %>
+</main>
+</body>
+</html>

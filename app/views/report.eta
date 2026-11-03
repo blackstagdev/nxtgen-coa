@@ -1,0 +1,214 @@
+<% layout('./layout') %>
+<%
+  const r = it.report;
+  const def = it.def;
+  const statusLabel = { draft: 'Draft', published: 'Published', unpublished: 'Unpublished', archived: 'Archived' };
+  const errByField = {};
+  for (const e of it.errors) errByField[e.field] = errByField[e.field] || e.message;
+  const labels = {};
+  for (const s of def.sections) for (const f of s.fields) labels[f.key] = f.label;
+  labels._client_email = 'Customer email (Test Reports access)';
+  labels._reason = 'Reason';
+  labels._form = 'Report';
+  const archived = r.status === 'archived';
+  const fmt = (d) => d ? new Date(d).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+  const sample = def.summary.sampleName ? r.data[def.summary.sampleName] : '';
+  const actionLabels = { create: 'Created draft', edit: 'Edited', upload: 'Uploaded image', render: 'Generated preview', render_failed: 'Preview failed', publish: 'Published', publish_failed: 'Publish failed', unpublish: 'Unpublished', archive: 'Archived', restore: 'Restored' };
+%>
+<div class="page-head">
+  <div>
+    <p class="eyebrow"><%= def.name %></p>
+    <h1><%= sample || 'Untitled draft' %></h1>
+    <p><span class="badge badge--<%= r.status %>"><%= statusLabel[r.status] %></span>
+      <% if (r.is_test_fixture) { %> <span class="badge badge--test">Test data</span><% } %>
+      <% if (it.hasUnpublishedChanges) { %> <span class="badge badge--unpublished">Unpublished changes</span><% } %>
+      &nbsp;<span class="mono"><%= r.verification_key %></span></p>
+  </div>
+  <a class="btn btn--secondary" href="/admin/reports">All reports</a>
+</div>
+
+<% if (it.errorMessage) { %>
+<div class="alert alert--error" role="alert" tabindex="-1" data-autofocus>
+  <p><strong><%= it.errorMessage %></strong></p>
+  <% if (it.errors.length) { %><ul><% for (const e of it.errors) { %><li><% if (e.field && !e.field.startsWith('_form')) { %><a href="#f-<%= e.field %>"><%= labels[e.field] || e.field %></a>: <% } %><%= e.message %></li><% } %></ul><% } %>
+</div>
+<% } %>
+<% if (def.status !== 'complete') { %>
+<div class="alert alert--warn"><p><strong>Template incomplete.</strong> <%= def.incompleteReason || 'The field mapping for this template has not been confirmed.' %> Drafts and previews are allowed; publishing is disabled.</p></div>
+<% } %>
+<% if (archived) { %>
+<div class="alert alert--info"><p>This report is archived and read-only. <%= it.canArchive ? 'Restore it to make changes.' : '' %></p></div>
+<% } %>
+
+<div class="editor">
+  <div>
+    <form id="report-form" method="post" action="/admin/reports/<%= r.id %>" novalidate data-dirty-guard>
+      <input type="hidden" name="_csrf" value="<%= it.csrf %>">
+      <p class="required-note">Fields marked <span class="req" aria-hidden="true">*</span><span class="visually-hidden">with an asterisk</span> are required before a preview can be generated. Values are printed exactly as entered — nothing is calculated.</p>
+      <fieldset class="bare" <%= archived ? 'disabled' : '' %>>
+      <% for (const s of def.sections) { %>
+      <fieldset class="section">
+        <legend><%= s.title %></legend>
+        <% if (s.description) { %><p class="section__desc"><%= s.description %></p><% } %>
+        <div class="grid12">
+          <% for (const f of s.fields) { %>
+            <%~ include('./partials/field', { field: f, value: it.data[f.key], error: errByField[f.key], reportId: r.id, disabled: archived }) %>
+          <% } %>
+        </div>
+      </fieldset>
+      <% } %>
+      <fieldset class="section">
+        <legend>Staff only</legend>
+        <p class="section__desc">Never printed on the certificate and never shown publicly.</p>
+        <div class="grid12">
+          <div class="field span-12<%= errByField._client_email ? ' field--invalid' : '' %>">
+            <label for="f-_client_email">Customer email for Test Reports access</label>
+            <input type="email" id="f-_client_email" name="_client_email" value="<%= it.clientEmail %>" autocomplete="off" aria-describedby="client-email-help">
+            <p class="field__help" id="client-email-help">When published, the report appears on the storefront “Test Reports” page for a signed-in customer whose verified account email matches.</p>
+            <% if (errByField._client_email) { %><p class="field__error"><%= errByField._client_email %></p><% } %>
+          </div>
+          <div class="field span-12">
+            <label for="f-_internal_notes">Internal notes</label>
+            <textarea id="f-_internal_notes" name="_internal_notes" maxlength="5000"><%= it.internalNotes %></textarea>
+          </div>
+        </div>
+      </fieldset>
+      </fieldset>
+      <% if (!archived) { %>
+      <div class="panel form-actions" data-sticky>
+        <button class="btn btn--primary" type="submit" name="_action" value="save">Save draft</button>
+        <button class="btn btn--brand" type="submit" name="_action" value="preview">Save &amp; generate preview</button>
+        <span class="required-note" data-dirty-indicator hidden>Unsaved changes</span>
+      </div>
+      <% } %>
+    </form>
+  </div>
+
+  <aside class="sidebar" aria-label="Report status and actions">
+    <section class="panel">
+      <div class="panel__title"><h2>Status</h2><span class="badge badge--<%= r.status %>"><%= statusLabel[r.status] %></span></div>
+      <ol class="steps">
+        <li class="done">Draft saved</li>
+        <li class="<%= it.missingCount === 0 ? 'done' : 'current' %>">Required fields complete<%= it.missingCount ? ' (' + it.missingCount + ' remaining)' : '' %></li>
+        <li class="<%= it.latestIsCurrent ? 'done' : it.missingCount === 0 ? 'current' : '' %>">Preview matches current data</li>
+        <li class="<%= r.status === 'published' && !it.hasUnpublishedChanges ? 'done' : it.latestIsCurrent ? 'current' : '' %>">Published</li>
+      </ol>
+      <dl class="kv">
+        <dt>Verification key</dt><dd><span class="vkey"><%= r.verification_key %></span></dd>
+        <% if (r.report_number) { %><dt>Report ID</dt><dd class="mono"><%= r.report_number %></dd><% } %>
+        <dt>Created</dt><dd><%= fmt(r.created_at) %></dd>
+        <dt>Last modified</dt><dd><%= fmt(r.updated_at) %></dd>
+        <dt>Published</dt><dd><%= r.published_at && r.status === 'published' ? fmt(r.published_at) : '—' %><% if (it.published) { %> (v<%= it.published.version_no %>)<% } %></dd>
+      </dl>
+    </section>
+
+    <% if (!archived) { %>
+    <section class="panel">
+      <h2>Publish</h2>
+      <% if (!it.canPublish) { %>
+        <p class="field__help">Only reviewers and administrators can publish. Generate a preview and ask a reviewer to publish it.</p>
+      <% } else if (it.blockers.length) { %>
+        <ul class="notes-list"><% for (const b of it.blockers) { %><li><%= b %></li><% } %></ul>
+      <% } else { %>
+        <p class="field__help">Publishing makes preview v<%= it.latest.version_no %> available on Verify COA<%= r.client_email ? ' and in the customer’s Test Reports' : '' %>.<%= it.published ? ' It replaces the currently published version.' : '' %></p>
+        <form method="post" action="/admin/reports/<%= r.id %>/publish" data-confirm="Publish version <%= it.latest.version_no %>? It will be publicly verifiable with key <%= r.verification_key %>.">
+          <input type="hidden" name="_csrf" value="<%= it.csrf %>">
+          <button class="btn btn--brand btn--block" type="submit">Publish v<%= it.latest.version_no %></button>
+        </form>
+      <% } %>
+      <% if (r.status === 'published' && it.canPublish) { %>
+      <details class="disclosure" data-mt="md">
+        <summary>Unpublish</summary>
+        <div>
+          <form class="inline-form" method="post" action="/admin/reports/<%= r.id %>/unpublish" data-confirm="Unpublish this report? Public links and images will stop working immediately.">
+            <input type="hidden" name="_csrf" value="<%= it.csrf %>">
+            <label for="unpub-reason">Reason <span class="req" aria-hidden="true">*</span></label>
+            <textarea id="unpub-reason" name="reason" required maxlength="500"></textarea>
+            <button class="btn btn--danger" type="submit">Unpublish</button>
+          </form>
+        </div>
+      </details>
+      <% } %>
+    </section>
+    <% } %>
+
+    <section class="panel" id="preview">
+      <div class="panel__title"><h2>Preview</h2><% if (it.latest) { %><span class="sub">v<%= it.latest.version_no %> · <%= fmt(it.latest.created_at) %></span><% } %></div>
+      <% if (!it.latest) { %>
+        <p class="field__help">No preview yet. Complete the required fields and choose “Save &amp; generate preview”.</p>
+      <% } else { %>
+        <% if (!it.latestIsCurrent) { %><div class="alert alert--warn"><p>The form has changed since this preview. Generate a new preview before publishing.</p></div><% } %>
+        <div class="preview-pages">
+        <% for (const p of it.latest.pages) { %>
+          <figure class="<%= it.latestIsCurrent ? '' : 'stale' %>">
+            <a href="/admin/reports/<%= r.id %>/versions/<%= it.latest.id %>/pages/<%= p.page_no %>" target="_blank" rel="noopener">
+              <img src="/admin/reports/<%= r.id %>/versions/<%= it.latest.id %>/pages/<%= p.page_no %>" alt="Generated certificate, page <%= p.page_no %> of <%= it.latest.pages.length %>" width="<%= p.width %>" height="<%= p.height %>" loading="lazy">
+            </a>
+            <figcaption><span>Page <%= p.page_no %> · <%= p.width %>×<%= p.height %> · <%= Math.round(p.bytes / 1024) %> KB</span><a href="/admin/reports/<%= r.id %>/versions/<%= it.latest.id %>/pages/<%= p.page_no %>?download=1">Download</a></figcaption>
+          </figure>
+        <% } %>
+        </div>
+      <% } %>
+    </section>
+
+    <details class="disclosure">
+      <summary>Template notes (<%= def.notes.length %>)</summary>
+      <div><ul class="notes-list"><% for (const n of def.notes) { %><li><%= n %></li><% } %></ul></div>
+    </details>
+
+    <details class="disclosure">
+      <summary>Versions (<%= it.versions.length %>)</summary>
+      <div>
+        <% if (!it.versions.length) { %><p class="field__help">No versions generated yet.</p><% } %>
+        <ul class="audit">
+        <% for (const v of it.versions) { %>
+          <li><strong>v<%= v.version_no %></strong> — <%= v.status === 'ready' ? 'ready' : v.status === 'failed' ? 'failed' : 'rendering' %><%= it.published && it.published.id === v.id ? ' · published' : '' %>
+            <time datetime="<%= new Date(v.created_at).toISOString() %>"><%= fmt(v.created_at) %> · data <span class="mono"><%= v.data_hash.slice(0, 10) %></span> · template v<%= v.definition_version %>/<%= v.renderer_version %></time>
+            <% if (v.error) { %><span class="field__error"><%= v.error %></span><% } %>
+            <% if (v.status === 'ready') { %><% for (const p of v.pages) { %><a href="/admin/reports/<%= r.id %>/versions/<%= v.id %>/pages/<%= p.page_no %>" target="_blank" rel="noopener">p<%= p.page_no %></a> <% } %><% } %>
+          </li>
+        <% } %>
+        </ul>
+      </div>
+    </details>
+
+    <details class="disclosure">
+      <summary>Audit trail (<%= it.audit.length %>)</summary>
+      <div>
+        <ul class="audit">
+        <% for (const a of it.audit) { %>
+          <li><strong><%= actionLabels[a.action] || a.action %></strong> by <%= a.user_name || 'system' %>
+            <% if (a.details && a.details.fields) { %><span class="sub">Fields: <%= a.details.fields.map((k) => labels[k] || k.replace(/^_/, '')).join(', ') %></span><% } %>
+            <% if (a.details && a.details.version) { %><span class="sub">Version v<%= a.details.version %></span><% } %>
+            <% if (a.details && a.details.reason) { %><span class="sub">Reason: <%= a.details.reason %></span><% } %>
+            <% if (a.details && a.details.error) { %><span class="sub">Error: <%= a.details.error %></span><% } %>
+            <time datetime="<%= new Date(a.created_at).toISOString() %>"><%= fmt(a.created_at) %></time>
+          </li>
+        <% } %>
+        </ul>
+      </div>
+    </details>
+
+    <% if (it.canArchive) { %>
+    <details class="disclosure">
+      <summary><%= archived ? 'Restore' : 'Archive' %></summary>
+      <div>
+        <% if (archived) { %>
+        <form class="inline-form" method="post" action="/admin/reports/<%= r.id %>/restore">
+          <input type="hidden" name="_csrf" value="<%= it.csrf %>">
+          <p class="field__help">Restoring returns the report to draft. It must be published again to be public.</p>
+          <button class="btn btn--secondary" type="submit">Restore as draft</button>
+        </form>
+        <% } else { %>
+        <form class="inline-form" method="post" action="/admin/reports/<%= r.id %>/archive" data-confirm="Archive this report? It will be removed from public access and become read-only.">
+          <input type="hidden" name="_csrf" value="<%= it.csrf %>">
+          <label for="arch-reason">Reason <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="arch-reason" name="reason" required maxlength="500"></textarea>
+          <button class="btn btn--danger" type="submit">Archive</button>
+        </form>
+        <% } %>
+      </div>
+    </details>
+    <% } %>
+  </aside>
+</div>

@@ -1,0 +1,42 @@
+<% layout('./layout') %>
+<% const err = {}; for (const e of it.errors) err[e.field] = e.message; %>
+<div class="page-head"><div><p class="eyebrow">Administration</p><h1>Users</h1><p>Reviewers and administrators can publish; staff can create drafts and previews.</p></div></div>
+<div class="table-wrap" data-mb="lg">
+<table class="data stack">
+  <caption class="visually-hidden">Staff accounts</caption>
+  <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Last sign-in</th><th scope="col">Update</th></tr></thead>
+  <tbody>
+  <% for (const u of it.users) { %>
+  <tr>
+    <td data-label="Name"><div><strong><%= u.name %></strong><span class="sub"><%= u.email %></span></div></td>
+    <td data-label="Role"><div><%= it.roleLabels[u.role] %></div></td>
+    <td data-label="Status"><div><span class="badge badge--<%= u.is_active ? 'published' : 'archived' %>"><%= u.is_active ? 'Active' : 'Deactivated' %></span></div></td>
+    <td data-label="Last sign-in"><div><%= u.last_login_at ? new Date(u.last_login_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never' %></div></td>
+    <td data-label="Update"><div><form method="post" action="/admin/users/<%= u.id %>" class="inline-form bare">
+        <input type="hidden" name="_csrf" value="<%= it.csrf %>">
+        <label class="visually-hidden" for="role-<%= u.id %>">Role for <%= u.email %></label>
+        <select id="role-<%= u.id %>" name="role"><% for (const r of it.roles) { %><option value="<%= r %>" <%~ u.role === r ? 'selected' : '' %>><%= it.roleLabels[r] %></option><% } %></select>
+        <label class="check"><input type="checkbox" name="is_active" value="1" <%~ u.is_active ? 'checked' : '' %>> Active</label>
+        <label class="visually-hidden" for="pw-<%= u.id %>">New temporary password for <%= u.email %></label>
+        <input id="pw-<%= u.id %>" type="password" name="new_password" placeholder="New temporary password (optional)" autocomplete="new-password">
+        <button class="btn btn--secondary btn--sm" type="submit">Save</button>
+      </form></div></td>
+  </tr>
+  <% } %>
+  </tbody>
+</table>
+</div>
+<section class="panel" data-w="md">
+  <h2>Add a user</h2>
+  <% if (it.errors.length) { %><div class="alert alert--error" role="alert"><p>Please correct the highlighted fields.</p></div><% } %>
+  <form method="post" action="/admin/users" novalidate>
+    <input type="hidden" name="_csrf" value="<%= it.csrf %>">
+    <div class="grid12">
+      <div class="field span-6<%= err.name ? ' field--invalid' : '' %>"><label for="u-name">Full name <span class="req" aria-hidden="true">*</span></label><input id="u-name" name="name" type="text" value="<%= it.form.name || '' %>" required><% if (err.name) { %><p class="field__error"><%= err.name %></p><% } %></div>
+      <div class="field span-6<%= err.email ? ' field--invalid' : '' %>"><label for="u-email">Email <span class="req" aria-hidden="true">*</span></label><input id="u-email" name="email" type="email" value="<%= it.form.email || '' %>" required><% if (err.email) { %><p class="field__error"><%= err.email %></p><% } %></div>
+      <div class="field span-6<%= err.role ? ' field--invalid' : '' %>"><label for="u-role">Role <span class="req" aria-hidden="true">*</span></label><select id="u-role" name="role"><% for (const r of it.roles) { %><option value="<%= r %>" <%~ (it.form.role || 'staff') === r ? 'selected' : '' %>><%= it.roleLabels[r] %></option><% } %></select></div>
+      <div class="field span-6<%= err.password ? ' field--invalid' : '' %>"><label for="u-pw">Temporary password <span class="req" aria-hidden="true">*</span></label><input id="u-pw" name="password" type="password" autocomplete="new-password" required aria-describedby="u-pw-help"><p class="field__help" id="u-pw-help">At least 12 characters. Share it securely; the user should change it after signing in.</p><% if (err.password) { %><p class="field__error"><%= err.password %></p><% } %></div>
+    </div>
+    <div class="form-actions" data-mt="md"><button class="btn btn--primary" type="submit">Create account</button></div>
+  </form>
+</section>

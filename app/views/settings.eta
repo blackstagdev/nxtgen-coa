@@ -1,0 +1,23 @@
+<% layout('./layout') %>
+<div class="page-head"><div><p class="eyebrow">Administration</p><h1>Integrations</h1><p>Configuration is read from environment variables. Secrets are never shown here.</p></div></div>
+<section class="panel">
+  <div class="panel__title"><h2>Image storage</h2><span class="badge badge--<%= it.storage.ok ? 'published' : 'unpublished' %>"><%= it.storage.ok ? 'Reachable' : 'Problem' %></span></div>
+  <dl class="kv">
+    <dt>Driver</dt><dd><%= it.storageDriver === 'r2' ? 'Cloudflare R2' : it.storageDriver + ' (development only)' %></dd>
+    <dt>Public asset URL</dt><dd class="mono"><%= it.publicBase || 'not set' %></dd>
+    <% if (it.storage.detail) { %><dt>Detail</dt><dd><%= it.storage.detail %></dd><% } %>
+  </dl>
+</section>
+<section class="panel">
+  <div class="panel__title"><h2>Shopify storefront</h2><span class="badge badge--<%= it.shopify.installed ? 'published' : 'unpublished' %>"><%= it.shopify.installed ? 'Connected' : 'Not connected' %></span></div>
+  <dl class="kv">
+    <dt>Store</dt><dd class="mono"><%= it.shopify.shop || 'SHOPIFY_SHOP not set' %></dd>
+    <dt>App credentials</dt><dd><%= it.shopify.configured ? 'Configured' : 'Missing SHOPIFY_API_KEY / SHOPIFY_API_SECRET / SHOPIFY_SHOP' %></dd>
+    <dt>App proxy URL</dt><dd class="mono"><%= it.shopify.proxyUrl %></dd>
+    <dt>Customer access</dt><dd><%= it.shopify.installed ? 'Installed via ' + it.shopify.via + (it.shopify.scopes ? ' (' + it.shopify.scopes + ')' : '') : 'Not installed — “Test Reports” cannot match customers until installed. Verify COA works without it.' %></dd>
+  </dl>
+  <% if (it.shopify.configured) { %>
+  <p data-mt="md"><a class="btn btn--secondary" href="/shopify/install"><%= it.shopify.installed ? 'Reinstall / refresh access' : 'Connect to Shopify' %></a></p>
+  <% } %>
+  <p class="field__help">Requested permission: <span class="mono">read_customers</span> only — used to read the signed-in customer’s verified email for the Test Reports page.</p>
+</section>

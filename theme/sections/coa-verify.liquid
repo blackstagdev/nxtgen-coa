@@ -1,0 +1,159 @@
+{%- comment -%}
+  Verify COA — looks up a published certificate by its verification key through
+  the NxtGen COA app (Shopify app proxy, same origin: /apps/coa/api/verify).
+  Only published reports are returned; drafts never leave the app.
+  Stable link: <page url>?key=NGA-XXXX-XXXX-XXXX
+{%- endcomment -%}
+{{ 'nga-coa.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'nga-verify.js' | asset_url }}" defer></script>
+
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+<div
+  class="section section--page-width color-{{ section.settings.color_scheme }} nga"
+  style="--nga-accent-color: {{ section.settings.accent }};"
+>
+  <div class="spacing-style" style="{% render 'spacing-style', settings: section.settings %}">
+    <nga-verify
+      data-endpoint="{{ section.settings.proxy_path | default: '/apps/coa' | append: '/api/verify' }}"
+      data-section="{{ section.id }}"
+    >
+      <div class="nga-verify__head">
+        <div>
+          {%- if section.settings.eyebrow != blank -%}<p class="nga__eyebrow">{{ section.settings.eyebrow | escape }}</p>{%- endif -%}
+          <h1 class="nga__title">{{ section.settings.heading | default: page.title | escape }}</h1>
+          {%- if section.settings.intro != blank -%}<div class="nga__intro rte">{{ section.settings.intro }}</div>{%- endif -%}
+
+          <form class="nga-verify__form" data-form novalidate>
+            <div class="nga-field">
+              <label for="nga-key-{{ section.id }}">{{ section.settings.input_label | escape }}<span class="nga-req" aria-hidden="true">*</span></label>
+              <input
+                class="nga-input nga-input--key"
+                id="nga-key-{{ section.id }}"
+                name="key"
+                type="text"
+                inputmode="text"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                maxlength="24"
+                placeholder="NGA-XXXX-XXXX-XXXX"
+                required
+                aria-required="true"
+                aria-describedby="nga-key-hint-{{ section.id }}"
+                data-input
+              >
+            </div>
+            <button class="button" type="submit" data-submit>{{ section.settings.button_label | escape }}</button>
+            <p class="nga-hint" id="nga-key-hint-{{ section.id }}">{{ section.settings.input_hint | escape }}</p>
+            <p class="nga-error-text" id="nga-key-error-{{ section.id }}" data-input-error hidden></p>
+          </form>
+        </div>
+        {%- if section.settings.show_steps -%}
+          <div>
+            <h2 class="visually-hidden">How verification works</h2>
+            <ol class="nga-steps">
+              {%- if section.settings.step_1 != blank -%}<li>{{ section.settings.step_1 | escape }}</li>{%- endif -%}
+              {%- if section.settings.step_2 != blank -%}<li>{{ section.settings.step_2 | escape }}</li>{%- endif -%}
+              {%- if section.settings.step_3 != blank -%}<li>{{ section.settings.step_3 | escape }}</li>{%- endif -%}
+            </ol>
+          </div>
+        {%- endif -%}
+      </div>
+
+      <div class="nga-verify__result" data-result aria-live="polite" tabindex="-1"></div>
+
+      {%- comment -%} State templates — text is editable in the theme editor; values are filled with textContent. {%- endcomment -%}
+      <template data-tpl="loading">
+        <p class="visually-hidden">{{ section.settings.msg_loading | escape }}</p>
+        <div class="nga-loading" aria-hidden="true">
+          <div><div class="nga-skeleton nga-skeleton--line" style="width:60%"></div><div class="nga-skeleton nga-skeleton--line"></div><div class="nga-skeleton nga-skeleton--line"></div><div class="nga-skeleton nga-skeleton--line" style="width:80%"></div></div>
+          <div class="nga-skeleton nga-skeleton--page"></div>
+        </div>
+      </template>
+      <template data-tpl="not_found">
+        <div class="nga-status nga-status--warn" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v6m0 3.5v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <div>
+            <strong>{{ section.settings.msg_not_found_title | escape }}</strong>
+            <p>{{ section.settings.msg_not_found | escape }} <span class="nga-mono" data-slot="key"></span></p>
+            {%- if section.settings.contact_link != blank -%}<p style="margin-top:8px"><a href="{{ section.settings.contact_link }}">{{ section.settings.contact_label | escape }}</a></p>{%- endif -%}
+          </div>
+        </div>
+      </template>
+      <template data-tpl="error">
+        <div class="nga-status nga-status--err" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 8.5l7 7m0-7l-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <div><strong>{{ section.settings.msg_error_title | escape }}</strong><p data-slot="message">{{ section.settings.msg_error | escape }}</p>
+            <p style="margin-top:10px"><button type="button" class="nga-link-btn" data-retry>{{ section.settings.retry_label | escape }}</button></p></div>
+        </div>
+      </template>
+      <template data-tpl="found">
+        <div class="nga-status nga-status--ok" role="status">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 12.5l3 3 6-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><strong>{{ section.settings.msg_found_title | escape }}</strong><p>{{ section.settings.msg_found | escape }}</p></div>
+        </div>
+        <div class="nga-report">
+          <div class="nga-report__facts">
+            <h2 data-slot="title"></h2>
+            <p data-slot="test-badge" hidden style="margin:0 0 12px"><span class="nga-badge nga-badge--test">Test data — not a real certificate</span></p>
+            <dl class="nga-dl">
+              <dt>Test</dt><dd data-slot="testTypeName"></dd>
+              <dt>Sample</dt><dd data-slot="sampleName"></dd>
+              <dt data-row="lot">Lot</dt><dd data-row="lot" data-slot="lot"></dd>
+              <dt data-row="reportNumber">Report ID</dt><dd data-row="reportNumber" class="nga-mono" data-slot="reportNumber"></dd>
+              <dt data-row="reportDate">Report date</dt><dd data-row="reportDate" data-slot="reportDate"></dd>
+              <dt>Published</dt><dd data-slot="publishedAt"></dd>
+              <dt>Verification key</dt><dd class="nga-mono" data-slot="verificationKey"></dd>
+            </dl>
+            <div class="nga-report__tools">
+              <a class="button" data-slot="open" target="_blank" rel="noopener">View full size</a>
+              <button type="button" class="button-secondary button" data-download>Download</button>
+              <button type="button" class="nga-link-btn" data-copy>Copy link</button>
+            </div>
+            <p class="nga-hint" data-copy-status role="status" style="margin-top:10px"></p>
+          </div>
+          <div class="nga-pages" data-slot="pages"></div>
+        </div>
+      </template>
+    </nga-verify>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Verify COA",
+  "class": "section-wrapper",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Certificate verification" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Verify a Certificate of Analysis", "info": "Leave empty to use the page title." },
+    { "type": "richtext", "id": "intro", "label": "Introduction", "default": "<p>Enter the verification key printed at the bottom of your certificate to view the report exactly as NxtGen Analysis published it.</p>" },
+    { "type": "text", "id": "input_label", "label": "Field label", "default": "Verification key" },
+    { "type": "text", "id": "input_hint", "label": "Field hint", "default": "Found in the “Verification Key” box at the bottom of each certificate, e.g. NGA-7K4M-Q9XD-2HTP." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Verify" },
+    { "type": "header", "content": "Steps" },
+    { "type": "checkbox", "id": "show_steps", "label": "Show steps", "default": true },
+    { "type": "text", "id": "step_1", "label": "Step 1", "default": "Find the verification key on the certificate you received." },
+    { "type": "text", "id": "step_2", "label": "Step 2", "default": "Enter the key exactly as printed and select Verify." },
+    { "type": "text", "id": "step_3", "label": "Step 3", "default": "Compare the published report shown here with your copy. Any difference means your copy is not authentic." },
+    { "type": "header", "content": "Messages" },
+    { "type": "text", "id": "msg_loading", "label": "Loading", "default": "Checking the verification key…" },
+    { "type": "text", "id": "msg_found_title", "label": "Found — title", "default": "Verified certificate" },
+    { "type": "text", "id": "msg_found", "label": "Found — text", "default": "This report was issued and published by NxtGen Analysis." },
+    { "type": "text", "id": "msg_not_found_title", "label": "Not found — title", "default": "No matching report" },
+    { "type": "text", "id": "msg_not_found", "label": "Not found — text", "default": "We could not find a published report for this key. Check each character and try again:" },
+    { "type": "text", "id": "msg_error_title", "label": "Error — title", "default": "Verification is unavailable" },
+    { "type": "text", "id": "msg_error", "label": "Error — text", "default": "We could not reach the verification service. Please try again in a moment." },
+    { "type": "text", "id": "retry_label", "label": "Retry button", "default": "Try again" },
+    { "type": "text", "id": "contact_label", "label": "Help link label", "default": "Contact us about a certificate" },
+    { "type": "url", "id": "contact_link", "label": "Help link" },
+    { "type": "header", "content": "Connection" },
+    { "type": "text", "id": "proxy_path", "label": "App proxy path", "default": "/apps/coa", "info": "Must match the app proxy configured for the NxtGen COA app." },
+    { "type": "header", "content": "Style" },
+    { "type": "color_scheme", "id": "color_scheme", "label": "Color scheme", "default": "scheme-1" },
+    { "type": "color", "id": "accent", "label": "Accent color", "default": "#701379" },
+    { "type": "range", "id": "padding-block-start", "label": "Top padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 56 },
+    { "type": "range", "id": "padding-block-end", "label": "Bottom padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80 }
+  ],
+  "presets": [{ "name": "Verify COA" }]
+}
+{% endschema %}

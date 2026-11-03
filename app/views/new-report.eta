@@ -1,0 +1,21 @@
+<% layout('./layout') %>
+<div class="page-head"><div><p class="eyebrow">New certificate</p><h1>Choose the test type</h1><p>The form fields and certificate template follow from this choice. It cannot be changed after the draft is created.</p></div></div>
+<form method="post" action="/admin/reports" data-w="lg">
+  <input type="hidden" name="_csrf" value="<%= it.csrf %>">
+  <fieldset class="bare">
+    <legend class="visually-hidden">Test type</legend>
+    <div class="type-list">
+    <% for (const d of it.definitions) { %>
+      <label class="type-option" for="t-<%= d.slug %>">
+        <input type="radio" id="t-<%= d.slug %>" name="test_type" value="<%= d.slug %>" required>
+        <span><strong><%= d.name %></strong><span class="sub"><%= d.pages.length %> page<%= d.pages.length > 1 ? 's' : '' %> · template folder “<%= d.source.folder.replace('Products/', '') %>”</span></span>
+        <% if (d.status !== 'complete') { %><span class="badge badge--incomplete">Incomplete</span><% } %>
+      </label>
+    <% } %>
+    </div>
+  </fieldset>
+  <div class="panel" data-mt="md">
+    <label class="check"><input type="checkbox" name="test_fixture" value="1"> Test data — watermarked “TEST DATA” and never returned by the live storefront</label>
+  </div>
+  <div class="form-actions" data-mt="md"><button class="btn btn--brand" type="submit">Create draft</button><a class="btn btn--secondary" href="/admin/reports">Cancel</a></div>
+</form>
