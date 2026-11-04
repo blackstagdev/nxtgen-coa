@@ -46,6 +46,20 @@ import {
 
 type Body = Record<string, string | string[] | undefined>;
 
+/** Non-secret R2 connection details for the Integrations page (masked). */
+function r2Diagnostics(cfg: FastifyInstance['deps']['cfg']) {
+  const r2 = cfg.storage.r2;
+  const mask = (v?: string, keep = 4) => (!v ? 'not set' : v.length <= keep * 2 ? `${v.length} chars` : `${v.slice(0, keep)}…${v.slice(-keep)} (${v.length} chars)`);
+  const endpoint = r2.endpoint || `https://${r2.accountId ?? '?'}.r2.cloudflarestorage.com`;
+  return {
+    endpoint: endpoint.replace(/^https:\/\/([^.]+)/, (_m, id: string) => `https://${mask(id)}`),
+    endpointSource: r2.endpoint ? 'R2_ENDPOINT' : 'built from R2_ACCOUNT_ID',
+    accessKey: mask(r2.accessKeyId),
+    secretLength: r2.secretAccessKey ? `${r2.secretAccessKey.length} chars${/\s/.test(r2.secretAccessKey) ? ' — contains whitespace!' : ''}` : 'not set',
+    buckets: `${r2.privateBucket}, ${r2.publicBucket}`,
+  };
+}
+
 export function clientIp(req: FastifyRequest): string {
   return req.ip || 'unknown';
 }
@@ -465,6 +479,7 @@ export async function registerAdminRoutes(app: FastifyInstance) {
       storage,
       storageDriver: app.deps.store.driver,
       publicBase: cfg.storage.publicBaseUrl,
+      r2Info: cfg.storage.driver === 'r2' ? r2Diagnostics(cfg) : null,
       shopify: { configured: app.deps.shopify.configured, shop: cfg.shopify.shop, ...shop, proxyUrl: `${cfg.appUrl}/proxy` },
     });
   });

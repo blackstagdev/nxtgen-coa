@@ -85,12 +85,12 @@ export function loadConfig(overrides: Partial<Record<string, string>> = {}): App
       driver,
       localDir: path.resolve(APP_ROOT, env('LOCAL_STORAGE_DIR', '.local-storage')!),
       r2: {
-        accountId: env('R2_ACCOUNT_ID'),
-        accessKeyId: env('R2_ACCESS_KEY_ID'),
-        secretAccessKey: env('R2_SECRET_ACCESS_KEY'),
+        accountId: env('R2_ACCOUNT_ID')?.trim(),
+        accessKeyId: env('R2_ACCESS_KEY_ID')?.trim(),
+        secretAccessKey: env('R2_SECRET_ACCESS_KEY')?.trim(),
         privateBucket: env('R2_PRIVATE_BUCKET', 'nga-coa-private')!,
         publicBucket: env('R2_PUBLIC_BUCKET', 'nga-coa-public')!,
-        endpoint: env('R2_ENDPOINT'),
+        endpoint: env('R2_ENDPOINT')?.trim().replace(/\/+$/, ''),
       },
       // Custom domain of the public R2 bucket if one exists; otherwise the app serves
       // published images itself from /coa-assets (no Cloudflare-hosted domain needed).

@@ -5,6 +5,12 @@
   <dl class="kv">
     <dt>Driver</dt><dd><%= it.storageDriver === 'r2' ? 'Cloudflare R2' : it.storageDriver + ' (development only)' %></dd>
     <dt>Public asset URL</dt><dd class="mono"><%= it.publicBase || 'not set' %></dd>
+    <% if (it.r2Info) { %>
+    <dt>R2 endpoint</dt><dd class="mono"><%= it.r2Info.endpoint %> <span class="sub"><%= it.r2Info.endpointSource %></span></dd>
+    <dt>Buckets</dt><dd class="mono"><%= it.r2Info.buckets %></dd>
+    <dt>Access key ID</dt><dd class="mono"><%= it.r2Info.accessKey %></dd>
+    <dt>Secret key</dt><dd class="mono"><%= it.r2Info.secretLength %></dd>
+    <% } %>
     <% if (it.storage.detail) { %><dt>Detail</dt><dd><%= it.storage.detail %></dd><% } %>
   </dl>
 </section>
