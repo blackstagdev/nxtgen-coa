@@ -5,7 +5,6 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
-  HeadBucketCommand,
   NoSuchKey,
 } from '@aws-sdk/client-s3';
 import type { AppConfig } from '../config.js';
@@ -95,15 +94,45 @@ export class R2Store implements ObjectStore {
   publicUrl(key: string) {
     return `${this.cfg.publicBaseUrl}/${key}`;
   }
+  /**
+   * Verifies exactly what the app needs — write, read and delete an object in each
+   * bucket — and turns S3/R2 errors into actionable messages.
+   */
   async check() {
-    try {
-      await this.client.send(new HeadBucketCommand({ Bucket: this.cfg.r2.privateBucket }));
-      await this.client.send(new HeadBucketCommand({ Bucket: this.cfg.r2.publicBucket }));
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, detail: (e as Error).message };
+    const key = `healthcheck/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.txt`;
+    for (const kind of ['private', 'public'] as const) {
+      const bucket = this.bucket(kind);
+      let step = 'write';
+      try {
+        await this.client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: 'ok', ContentType: 'text/plain' }));
+        step = 'read';
+        await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+        step = 'delete';
+        await this.client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+      } catch (e) {
+        return { ok: false, detail: `${kind} bucket "${bucket}" — ${step} failed: ${explainR2Error(e)}` };
+      }
     }
+    return { ok: true, detail: 'Write, read and delete succeeded on both buckets.' };
   }
+}
+
+/** Maps S3/R2 SDK errors to messages staff can act on (never includes secrets). */
+export function explainR2Error(e: unknown): string {
+  const err = e as { name?: string; Code?: string; code?: string; message?: string; $metadata?: { httpStatusCode?: number } };
+  const code = err.Code ?? err.name ?? err.code ?? '';
+  const status = err.$metadata?.httpStatusCode;
+  const msg = err.message ?? '';
+  const tag = `(${[code, status].filter(Boolean).join(', ')})`;
+  if (/ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(`${code} ${msg}`))
+    return `cannot reach the R2 endpoint — check R2_ACCOUNT_ID (32-character account ID, not a URL) ${tag}`;
+  if (code === 'InvalidAccessKeyId') return `R2_ACCESS_KEY_ID is not recognised ${tag}`;
+  if (code === 'SignatureDoesNotMatch') return `R2_SECRET_ACCESS_KEY does not match the access key ${tag}`;
+  if (code === 'NoSuchBucket' || status === 404)
+    return `bucket not found — check the bucket name and R2_ACCOUNT_ID; for an EU-jurisdiction bucket set R2_ENDPOINT=https://<account-id>.eu.r2.cloudflarestorage.com ${tag}`;
+  if (code === 'AccessDenied' || status === 403 || status === 401)
+    return `access denied — the API token needs "Object Read & Write" and must include this bucket ${tag}`;
+  return `${msg && msg !== 'UnknownError' ? msg : 'unexpected error'} ${tag}`;
 }
 
 /** Development-only filesystem store (refused in production by config). */

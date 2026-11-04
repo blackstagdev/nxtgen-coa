@@ -85,3 +85,14 @@ describe('storage adapter contract', () => {
     await expect(s.put('private', '../etc/passwd', Buffer.from('x'), { contentType: 'text/plain' })).rejects.toBeInstanceOf(StorageError);
   });
 });
+
+describe('R2 error explanations', () => {
+  it('turns SDK errors into actionable messages', async () => {
+    const { explainR2Error } = await import('../src/storage/index.js');
+    expect(explainR2Error({ name: 'AccessDenied', $metadata: { httpStatusCode: 403 } })).toMatch(/Object Read & Write/);
+    expect(explainR2Error({ name: 'NoSuchBucket', $metadata: { httpStatusCode: 404 } })).toMatch(/bucket not found/);
+    expect(explainR2Error({ name: 'SignatureDoesNotMatch' })).toMatch(/R2_SECRET_ACCESS_KEY/);
+    expect(explainR2Error({ code: 'ENOTFOUND', message: 'getaddrinfo ENOTFOUND x' })).toMatch(/R2_ACCOUNT_ID/);
+    expect(explainR2Error({ name: 'UnknownError', message: 'UnknownError', $metadata: { httpStatusCode: 400 } })).toMatch(/unexpected error \(UnknownError, 400\)/);
+  });
+});
