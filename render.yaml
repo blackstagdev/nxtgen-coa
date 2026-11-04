@@ -44,6 +44,9 @@ services:
         sync: false
       - key: R2_SECRET_ACCESS_KEY
         sync: false
+      # Buckets were created in the US jurisdiction: https://<account-id>.us.r2.cloudflarestorage.com
+      - key: R2_ENDPOINT
+        sync: false
       - key: R2_PRIVATE_BUCKET
         value: nga-coa-private
       - key: R2_PUBLIC_BUCKET

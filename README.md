@@ -142,6 +142,7 @@ Steps (for an authorized person):
 |---|---|---|
 | `APP_URL` | yes | Public URL of the service. Used for the OAuth redirect |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | yes | R2 API token with Object Read & Write on both buckets |
+| `R2_ENDPOINT` | if jurisdiction | The bucket's **S3 API** URL without the bucket name when it contains a jurisdiction (`.us.`, `.eu.`). Production: `https://<account-id>.us.r2.cloudflarestorage.com` |
 | `R2_PRIVATE_BUCKET`, `R2_PUBLIC_BUCKET` | defaults | `nga-coa-private`, `nga-coa-public` |
 | `PUBLIC_ASSET_BASE_URL` | optional | Leave unset: published images are served by the app at `<APP_URL>/coa-assets`. Set only if a custom domain is connected to the public bucket |
 | `SHOPIFY_SHOP` | yes | `your-store.myshopify.com` |

@@ -129,9 +129,9 @@ export function explainR2Error(e: unknown): string {
   if (code === 'InvalidAccessKeyId') return `R2_ACCESS_KEY_ID is not recognised ${tag}`;
   if (code === 'SignatureDoesNotMatch') return `R2_SECRET_ACCESS_KEY does not match the access key ${tag}`;
   if (code === 'NoSuchBucket' || status === 404)
-    return `bucket not found — check the bucket name and R2_ACCOUNT_ID; for an EU-jurisdiction bucket set R2_ENDPOINT=https://<account-id>.eu.r2.cloudflarestorage.com ${tag}`;
+    return `bucket not found — check the bucket name and R2_ACCOUNT_ID; for a jurisdiction bucket (.us./.eu.) set R2_ENDPOINT to the bucket's S3 API URL without the bucket name ${tag}`;
   if (code === 'AccessDenied' || status === 403 || status === 401)
-    return `access denied — the API token needs "Object Read & Write" and must include this bucket ${tag}`;
+    return `access denied — the API token needs "Object Read & Write" on this bucket; if the bucket's S3 API URL contains a jurisdiction (e.g. .us., .eu.), set R2_ENDPOINT to that URL without the bucket name ${tag}`;
   return `${msg && msg !== 'UnknownError' ? msg : 'unexpected error'} ${tag}`;
 }
 
