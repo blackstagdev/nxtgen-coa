@@ -96,3 +96,16 @@ describe('R2 error explanations', () => {
     expect(explainR2Error({ name: 'UnknownError', message: 'UnknownError', $metadata: { httpStatusCode: 400 } })).toMatch(/unexpected error \(UnknownError, 400\)/);
   });
 });
+
+describe('Shopify OAuth callback errors', () => {
+  it('names the store Shopify reported when SHOPIFY_SHOP differs', async () => {
+    const { ShopifyClient } = await import('../src/shopify/shopify.js');
+    const { loadConfig } = await import('../src/config.js');
+    const cfg = loadConfig({ NODE_ENV: 'test', SHOPIFY_API_KEY: 'k', SHOPIFY_API_SECRET: ' s \n', SHOPIFY_SHOP: 'https://NextGenAnalysis.myshopify.com/' });
+    expect(cfg.shopify.shop).toBe('nextgenanalysis.myshopify.com');
+    expect(cfg.shopify.apiSecret).toBe('s');
+    const client = new ShopifyClient(cfg, {} as never);
+    await expect(client.completeInstall({ shop: '6rt4pq-wi.myshopify.com', hmac: 'x' })).rejects.toThrow(/reported the store as "6rt4pq-wi\.myshopify\.com"/);
+    await expect(client.completeInstall({ shop: 'nextgenanalysis.myshopify.com', hmac: 'x' })).rejects.toThrow(/SHOPIFY_API_SECRET does not match/);
+  });
+});

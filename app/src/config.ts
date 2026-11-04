@@ -97,9 +97,9 @@ export function loadConfig(overrides: Partial<Record<string, string>> = {}): App
       publicBaseUrl: (env('PUBLIC_ASSET_BASE_URL') ?? `${appUrl}/coa-assets`).replace(/\/$/, ''),
     },
     shopify: {
-      apiKey: env('SHOPIFY_API_KEY'),
-      apiSecret: env('SHOPIFY_API_SECRET'),
-      shop: env('SHOPIFY_SHOP'),
+      apiKey: env('SHOPIFY_API_KEY')?.trim(),
+      apiSecret: env('SHOPIFY_API_SECRET')?.trim(),
+      shop: env('SHOPIFY_SHOP')?.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
       scopes: env('SHOPIFY_SCOPES', 'read_customers')!,
       apiVersion: env('SHOPIFY_API_VERSION', '2026-07')!,
       proxySubpath: env('SHOPIFY_PROXY_SUBPATH', 'apps/coa')!,

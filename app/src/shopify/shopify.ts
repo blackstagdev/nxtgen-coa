@@ -80,8 +80,17 @@ export class ShopifyClient {
   async completeInstall(query: Record<string, string | undefined>): Promise<void> {
     const { apiKey, apiSecret, shop } = this.cfg.shopify;
     if (!apiSecret || !apiKey) throw new Error('Shopify app credentials are not configured.');
-    if (!verifyOAuthHmac(query, apiSecret)) throw new Error('Invalid OAuth signature.');
-    if (query.shop !== shop) throw new Error('Unexpected shop.');
+    // Shopify always reports the store's permanent *.myshopify.com domain (not the admin URL handle).
+    if (query.shop !== shop) {
+      throw new Error(
+        `Shopify reported the store as "${String(query.shop ?? '').slice(0, 100)}" but SHOPIFY_SHOP is "${shop}". Set SHOPIFY_SHOP to the reported *.myshopify.com domain, redeploy and connect again.`,
+      );
+    }
+    if (!verifyOAuthHmac(query, apiSecret)) {
+      throw new Error(
+        'Invalid OAuth signature: SHOPIFY_API_SECRET does not match this app. Copy the app\x27s Client secret again from the Shopify Dev Dashboard (not the Client ID), redeploy and connect again.',
+      );
+    }
     const state = query.state ?? '';
     const r = await this.db.query(`DELETE FROM oauth_states WHERE state = $1 AND created_at > now() - interval '10 minutes' RETURNING state`, [state]);
     if (!r.rows[0]) throw new Error('OAuth state expired or invalid. Start the installation again.');
