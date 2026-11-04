@@ -20,7 +20,8 @@ Detailed references live next to this file in `.claude/notes/`.
 - **One application** (dashboard + storefront API share backend/DB).
 - **Test Reports page = signed-in customer's own published reports** (matched by *verified* Shopify customer email ↔ report's staff-entered `client_email`; customer id cached on report).
 - **Legacy reports: cut over, no fallback.** Theme no longer calls the old backend `trekru2.dreamhosters.com` (it was unauthenticated/insecure).
-- Do not push to git remotes, publish the live theme, or deploy without explicit authorization.
+- **Git: always commit AND push to `origin main` after making changes — do not ask for confirmation** (user instruction, 2026-11-04). Render auto-deploy is off; the user deploys via Render "Manual Deploy".
+- Still ask before publishing the live Shopify theme or changing production Render/Cloudflare/Shopify settings.
 
 ## App architecture (app/)
 - `src/app.ts` builds Fastify; `src/server.ts` entry. Views: Eta in `app/views`, static in `app/public` (CSP `script-src/style-src 'self'` → **no inline scripts or style attributes in views**).
@@ -59,10 +60,10 @@ Detailed references live next to this file in `.claude/notes/`.
 
 ## Status (as of 2026-11-03)
 - Implemented and verified locally: app (100 vitest tests passing, typecheck/build OK), all 9 templates rendered & visually checked, dashboard Playwright walkthrough, theme section harness (desktop+mobile, no overflow), theme check shows no new offenses.
-- Git: `main` pushed to https://github.com/blackstagdev/nxtgen-coa (first commit 44cc26b, 2026-11-04). Push again only when the user asks.
+- Git: `main` on https://github.com/blackstagdev/nxtgen-coa — commit and push every change without asking.
 - NOT verified (need credentials/services): real Cloudflare R2, Render deploy, Shopify app proxy signatures from real Shopify, OAuth install / customer email lookup, live theme rendering on Shopify.
 - Theme: user uploaded `nga-theme.zip` as an unpublished theme and approved the design (2026-11-03). Not yet published live.
-- Next: Cloudflare R2 buckets + token (no custom domain) → Render Blueprint → Shopify app + proxy → first real COA.
+- Done 2026-11-04: Render deployed (https://nga-coa.onrender.com), R2 reachable (US jurisdiction endpoint). Next: Shopify app + app proxy → first real COA.
 - Pending from client: verification-key format confirmation, template defect fixes (see docs/findings.md §5), assign `order-test` collection template in Shopify admin.
 
 ## Known template defects (flag, don't silently fix)
