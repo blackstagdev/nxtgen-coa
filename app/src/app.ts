@@ -139,7 +139,12 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
 
   app.setNotFoundHandler((req, reply) => {
     if (req.url.startsWith('/proxy') || req.headers.accept?.includes('application/json')) {
-      return reply.code(404).send({ error: 'not_found' });
+      // Distinct from "report not found": usually means the Shopify app proxy URL does not end in /proxy.
+      req.log.warn({ url: req.url.split('?')[0] }, 'unknown route');
+      return reply.code(404).send({
+        error: 'route_not_found',
+        message: 'Unknown endpoint. If this came from the storefront, check that the Shopify app proxy URL ends with /proxy.',
+      });
     }
     return app.view(reply, 'error', { title: 'Not found', message: 'The page you requested does not exist.' }, 404);
   });

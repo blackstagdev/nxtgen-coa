@@ -51,6 +51,11 @@ export async function registerProxyRoutes(app: FastifyInstance) {
     req.proxyCustomerId = v.customerId;
   });
 
+  // Connectivity check: open https://<store>/apps/coa/api/ping in a browser.
+  app.get('/proxy/api/ping', async (req, reply) =>
+    json(reply, 200, { ok: true, service: 'nga-coa', proxy: 'signature verified', signedInCustomer: !!req.proxyCustomerId }),
+  );
+
   app.get('/proxy/api/test-types', async (_req, reply) =>
     json(reply, 200, { testTypes: DEFINITIONS.map((d) => ({ slug: d.slug, name: d.name })) }),
   );

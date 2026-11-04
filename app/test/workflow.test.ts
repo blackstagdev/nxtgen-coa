@@ -393,3 +393,23 @@ describe('test fixtures stay out of production results', () => {
     expect(await findPublishedByKey({ db: env.db, store: env.store }, key, { includeFixtures: false })).toBeNull();
   });
 });
+
+describe('proxy diagnostics', () => {
+  let env: TestEnv;
+  beforeAll(async () => {
+    env = await startTestEnv();
+  }, 60_000);
+  afterAll(async () => env?.close());
+
+  it('answers ping through a signed proxy request', async () => {
+    const r = await env.app.inject({ method: 'GET', url: proxyUrl('/proxy/api/ping') });
+    expect(r.statusCode).toBe(200);
+    expect(JSON.parse(r.body).ok).toBe(true);
+  });
+
+  it('distinguishes an unknown endpoint from a missing report', async () => {
+    const r = await env.app.inject({ method: 'GET', url: '/api/verify?key=NGA-0000-0000-0000', headers: { accept: 'application/json' } });
+    expect(r.statusCode).toBe(404);
+    expect(JSON.parse(r.body).error).toBe('route_not_found');
+  });
+});

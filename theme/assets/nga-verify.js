@@ -111,7 +111,7 @@
         this.renderReport(body.report, userInitiated);
         return;
       }
-      if (res && res.status === 404) {
+      if (res && res.status === 404 && body && body.error === 'not_found') {
         this.updateUrl(key);
         var nf = this.tpl('not_found');
         var slot = nf.querySelector('[data-slot="key"]');
@@ -128,6 +128,11 @@
       if (res && res.status === 429) {
         var m = err.querySelector('[data-slot="message"]');
         if (m) m.textContent = (body && body.message) || 'Too many lookups. Please wait a minute and try again.';
+      } else if (res && res.status === 404) {
+        // Endpoint missing (not "no such report"): the app proxy is misconfigured.
+        var m2 = err.querySelector('[data-slot="message"]');
+        if (m2) m2.textContent = 'The verification service is not set up correctly. Please contact NxtGen Analysis.';
+        if (window.console) console.warn('[nga-verify] proxy endpoint not found:', body && body.message);
       }
       var retry = err.querySelector('[data-retry]');
       if (retry) retry.addEventListener('click', () => this.lookup(key, true));
