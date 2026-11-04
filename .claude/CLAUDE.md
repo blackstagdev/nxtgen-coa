@@ -63,7 +63,7 @@ Detailed references live next to this file in `.claude/notes/`.
 - Git: `main` on https://github.com/blackstagdev/nxtgen-coa — commit and push every change without asking.
 - NOT verified (need credentials/services): real Cloudflare R2, Render deploy, Shopify app proxy signatures from real Shopify, OAuth install / customer email lookup, live theme rendering on Shopify.
 - Theme: user uploaded `nga-theme.zip` as an unpublished theme and approved the design (2026-11-03). Not yet published live.
-- Done 2026-11-04: Render deployed (https://nga-coa.onrender.com), R2 reachable (US jurisdiction endpoint). Next: Shopify app + app proxy → first real COA.
+- Done 2026-11-04: Render deployed (https://nga-coa.onrender.com), R2 reachable (US jurisdiction endpoint). Shopify app (Dev Dashboard, custom distribution, app proxy apps/coa → /proxy) installed and Connected via OAuth (read_customers) on 2026-11-04. Next: storefront proxy test on theme preview → first real (non-test) COA publish + verify → Test Reports with a customer account (protected customer data/email may still need Partner Dashboard request) → publish theme.
 - Pending from client: verification-key format confirmation, template defect fixes (see docs/findings.md §5), assign `order-test` collection template in Shopify admin.
 
 ## Known template defects (flag, don't silently fix)
